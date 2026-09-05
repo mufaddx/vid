@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vidlix
+      POSTGRES_PASSWORD: vidlix
+      POSTGRES_DB: vidlix
+    ports:
+      - "55432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  app:
+    image: node:20-bookworm
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://vidlix:vidlix@db:5432/vidlix
+    command: tail -f /dev/null
+    depends_on:
+      - db
+
+volumes:
+  db_data:

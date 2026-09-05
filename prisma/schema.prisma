@@ -1,0 +1,782 @@
+// VIDLIX — Prisma schema
+// Thin-slice end-to-end data model: creator management, agreements/e-sign,
+// billing/payouts, and creator email/inbox. See ARCHITECTURE.md for context.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Admin / Auth
+// ---------------------------------------------------------------------------
+
+enum AdminRole {
+  SUPER_ADMIN
+  TALENT_MANAGER
+  CAMPAIGN_MANAGER
+  FINANCE_MANAGER
+  INBOX_MANAGER
+  VIEWER
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         AdminRole @default(SUPER_ADMIN)
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  agreementsCreated Agreement[]     @relation("AgreementCreatedBy")
+  invoicesCreated   Invoice[]       @relation("InvoiceCreatedBy")
+  activityLogs      ActivityLog[]
+  sessions          AdminSession[]
+
+  @@map("admin_users")
+}
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  adminId   String
+  admin     AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("admin_sessions")
+}
+
+// Singleton company / letterhead settings
+model CompanySettings {
+  id                     String   @id @default("company")
+  companyName            String   @default("VIDLIX")
+  legalName              String   @default("Vidlix Media Private Limited")
+  tagline                String   @default("CREATORS • BRANDS • BEYOND")
+  email                  String   @default("hello@vidlix.in")
+  phone                  String   @default("+91 90000 00000")
+  website                String   @default("https://vidlix.in")
+  address                String   @default("Delhi, India")
+  gstin                  String?
+  cin                    String?
+  logoUrl                String?
+  primaryColor           String   @default("#6D28D9")
+  secondaryColor         String   @default("#111827")
+  invoicePrefix          String   @default("INV")
+  receiptPrefix          String   @default("RCPT")
+  paymentPrefix          String   @default("PAY")
+  payoutPrefix           String   @default("PAYOUT")
+  agreementPrefix        String   @default("AGR")
+  defaultCommissionPct   Decimal  @default(30) @db.Decimal(5, 2)
+  defaultDueDays         Int      @default(30)
+  bankDetails            String?
+  upiDetails             String?
+  updatedAt              DateTime @updatedAt
+
+  @@map("company_settings")
+}
+
+// Numbered sequences per document type per year, e.g. AGR-2026-00001
+model DocumentSequence {
+  id     String @id @default(cuid())
+  prefix String
+  year   Int
+  lastN  Int    @default(0)
+
+  @@unique([prefix, year])
+  @@map("document_sequences")
+}
+
+// ---------------------------------------------------------------------------
+// Creators
+// ---------------------------------------------------------------------------
+
+enum CreatorStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+model Creator {
+  id                    String        @id @default(cuid())
+  name                  String
+  slug                  String        @unique
+  displayName           String?
+  profileImage          String?
+  email                 String?
+  phone                 String?
+  address               String?
+  city                  String?
+  state                 String?
+  country               String        @default("India")
+  bio                   String?
+  longBio               String?
+  journeyStartYear      Int?
+  category              String?
+  languages             String[]      @default([])
+  status                CreatorStatus @default(PENDING)
+  featured              Boolean       @default(false)
+  orbitPriority         Int           @default(0)
+  managementStartDate   DateTime?
+  managementFee         Decimal?      @db.Decimal(12, 2)
+  commissionPercentage  Decimal       @default(30) @db.Decimal(5, 2)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  journeyEntries    CreatorJourneyEntry[]
+  socialAccounts    SocialAccount[]
+  agreements        Agreement[]
+  invoices          Invoice[]
+  payouts           Payout[]
+  emailAccounts     CreatorEmailAccount[]
+  collaborations    CollaborationCreator[]
+  documents         Document[]
+  activityLogs      ActivityLog[]
+  audienceSnapshots CreatorAudienceSnapshot[]
+  inquiries         Inquiry[]
+
+  @@map("creators")
+}
+
+model CreatorJourneyEntry {
+  id          String  @id @default(cuid())
+  creatorId   String
+  creator     Creator @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  year        Int
+  title       String
+  description String?
+  order       Int     @default(0)
+  visible     Boolean @default(true)
+
+  @@map("creator_journey_entries")
+}
+
+enum SocialPlatform {
+  INSTAGRAM
+  YOUTUBE
+  FACEBOOK
+}
+
+enum ConnectionStatus {
+  NOT_CONNECTED
+  CONNECTED
+  ERROR
+}
+
+model SocialAccount {
+  id                   String           @id @default(cuid())
+  creatorId            String
+  creator              Creator          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  platform             SocialPlatform
+  username             String
+  platformUserId       String?
+  profileUrl           String?
+  connectionStatus     ConnectionStatus @default(NOT_CONNECTED)
+  accessTokenRef       String?          // reference/id into a secrets store — never the raw token
+  lastSyncedAt         DateTime?
+  lastSyncError        String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  metric    SocialMetric?
+  snapshots SocialMetricSnapshot[]
+
+  @@unique([creatorId, platform])
+  @@map("social_accounts")
+}
+
+model SocialMetric {
+  id              String        @id @default(cuid())
+  socialAccountId String        @unique
+  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+  followers       Int           @default(0)
+  subscribers     Int           @default(0)
+  following       Int?
+  views           BigInt?
+  posts           Int?
+  engagementRate  Decimal?      @db.Decimal(5, 2)
+  lastUpdated     DateTime      @default(now())
+
+  @@map("social_metrics")
+}
+
+model SocialMetricSnapshot {
+  id              String        @id @default(cuid())
+  socialAccountId String
+  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+  followers       Int           @default(0)
+  subscribers     Int           @default(0)
+  capturedAt      DateTime      @default(now())
+
+  @@map("social_metric_snapshots")
+}
+
+model CreatorAudienceSnapshot {
+  id             String   @id @default(cuid())
+  creatorId      String
+  creator        Creator  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  totalAudience  Int
+  capturedAt     DateTime @default(now())
+
+  @@map("creator_audience_snapshots")
+}
+
+// ---------------------------------------------------------------------------
+// Brands / Campaigns / Collaborations
+// ---------------------------------------------------------------------------
+
+enum BrandStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Brand {
+  id            String      @id @default(cuid())
+  name          String
+  slug          String      @unique
+  logoUrl       String?
+  contactPerson String?
+  email         String?
+  phone         String?
+  website       String?
+  address       String?
+  industry      String?
+  notes         String?
+  status        BrandStatus @default(ACTIVE)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  campaigns      Campaign[]
+  collaborations Collaboration[]
+  agreements     Agreement[]
+  invoices       Invoice[]
+  inquiries      Inquiry[]
+
+  @@map("brands")
+}
+
+enum CampaignStatus {
+  DRAFT
+  PLANNING
+  CREATOR_SELECTION
+  NEGOTIATION
+  AGREEMENT_PENDING
+  ACTIVE
+  CONTENT_REVIEW
+  PUBLISHED
+  COMPLETED
+  CANCELLED
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  name        String
+  brandId     String
+  brand       Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Decimal?       @db.Decimal(12, 2)
+  status      CampaignStatus @default(DRAFT)
+  notes       String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  collaborations Collaboration[]
+  agreements     Agreement[]
+  invoices       Invoice[]
+  payouts        Payout[]
+
+  @@map("campaigns")
+}
+
+enum CollaborationStatus {
+  NEW
+  REVIEWING
+  CREATOR_SELECTED
+  PROPOSAL
+  NEGOTIATION
+  AGREEMENT_PENDING
+  SIGNED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model Collaboration {
+  id         String               @id @default(cuid())
+  campaignId String?
+  campaign   Campaign?            @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  brandId    String
+  brand      Brand                @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  status     CollaborationStatus  @default(NEW)
+  notes      String?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  creators CollaborationCreator[]
+
+  @@map("collaborations")
+}
+
+model CollaborationCreator {
+  id              String        @id @default(cuid())
+  collaborationId String
+  collaboration   Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  creatorId       String
+  creator         Creator       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@unique([collaborationId, creatorId])
+  @@map("collaboration_creators")
+}
+
+// ---------------------------------------------------------------------------
+// Inquiries (public website intake)
+// ---------------------------------------------------------------------------
+
+enum InquiryType {
+  CREATOR
+  BRAND
+  COLLABORATION
+}
+
+enum InquiryStatus {
+  NEW
+  UNDER_REVIEW
+  CONTACTED
+  QUALIFIED
+  APPROVED
+  REJECTED
+  ONBOARDED
+  CONVERTED
+  CLOSED
+}
+
+model Inquiry {
+  id          String        @id @default(cuid())
+  type        InquiryType
+  status      InquiryStatus @default(NEW)
+  fullName    String?
+  email       String?
+  phone       String?
+  brandName   String?
+  website     String?
+  message     String?
+  payload     Json          // full raw form payload for flexibility
+  creatorId   String?
+  creator     Creator?      @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  brandId     String?
+  brand       Brand?        @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("inquiries")
+}
+
+// ---------------------------------------------------------------------------
+// Agreements / E-sign
+// ---------------------------------------------------------------------------
+
+enum AgreementType {
+  CREATOR_MANAGEMENT
+  BRAND_COLLABORATION
+  CAMPAIGN_AGREEMENT
+  NDA
+  PAYMENT_AGREEMENT
+  CUSTOM
+}
+
+enum TemplateStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+model AgreementTemplate {
+  id          String         @id @default(cuid())
+  name        String
+  type        AgreementType
+  description String?
+  content     String         // HTML with {{variables}}
+  status      TemplateStatus @default(DRAFT)
+  version     Int            @default(1)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  agreements Agreement[]
+
+  @@map("agreement_templates")
+}
+
+enum AgreementStatus {
+  DRAFT
+  PENDING_SIGNATURE
+  SIGNED
+  ACTIVE
+  EXPIRING_SOON
+  EXPIRED
+  COMPLETED
+  CANCELLED
+}
+
+model Agreement {
+  id                   String            @id @default(cuid())
+  agreementNumber      String            @unique
+  type                 AgreementType
+  creatorId            String
+  creator              Creator           @relation(fields: [creatorId], references: [id])
+  brandId              String?
+  brand                Brand?            @relation(fields: [brandId], references: [id])
+  campaignId           String?
+  campaign             Campaign?         @relation(fields: [campaignId], references: [id])
+  templateId           String?
+  template             AgreementTemplate? @relation(fields: [templateId], references: [id])
+  status               AgreementStatus   @default(DRAFT)
+  version              Int               @default(1)
+  content              String            // rendered HTML snapshot (with variables substituted) for this version
+  startDate            DateTime?
+  endDate              DateTime?
+  commissionPercentage Decimal           @default(30) @db.Decimal(5, 2)
+
+  signingToken           String?   @unique
+  signingTokenExpiresAt  DateTime?
+
+  createdById String?
+  createdBy   AdminUser? @relation("AgreementCreatedBy", fields: [createdById], references: [id])
+
+  finalPdfAssetId String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  sentAt      DateTime?
+  viewedAt    DateTime?
+  signedAt    DateTime?
+  completedAt DateTime?
+
+  signatures Signature[]
+  auditLogs  AgreementAuditLog[]
+  invoices   Invoice[]
+  otpChallenges OtpChallenge[]
+  documents  Document[]
+
+  @@map("agreements")
+}
+
+enum SignerType {
+  ADMIN
+  CREATOR
+}
+
+model Signature {
+  id             String     @id @default(cuid())
+  agreementId    String
+  agreement      Agreement  @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  signerType     SignerType
+  signerName     String
+  signerEmail    String?
+  method         String     // draw | type | upload
+  signatureAsset String     // data URI or storage reference
+  otpVerified    Boolean    @default(false)
+  signedAt       DateTime   @default(now())
+  createdAt      DateTime   @default(now())
+
+  @@map("signatures")
+}
+
+model AgreementAuditLog {
+  id          String    @id @default(cuid())
+  agreementId String
+  agreement   Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  event       String
+  actor       String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+
+  @@map("agreement_audit_logs")
+}
+
+model OtpChallenge {
+  id          String    @id @default(cuid())
+  agreementId String
+  agreement   Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  signerEmail String
+  codeHash    String
+  expiresAt   DateTime
+  attempts    Int       @default(0)
+  verified    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@map("otp_challenges")
+}
+
+// ---------------------------------------------------------------------------
+// Billing: Invoices / Payments / Payouts
+// ---------------------------------------------------------------------------
+
+enum InvoiceType {
+  CREATOR_MANAGEMENT
+  BRAND_CAMPAIGN
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  invoiceType   InvoiceType
+  creatorId     String?
+  creator       Creator?      @relation(fields: [creatorId], references: [id])
+  brandId       String?
+  brand         Brand?        @relation(fields: [brandId], references: [id])
+  campaignId    String?
+  campaign      Campaign?     @relation(fields: [campaignId], references: [id])
+  agreementId   String?
+  agreement     Agreement?    @relation(fields: [agreementId], references: [id])
+  status        InvoiceStatus @default(DRAFT)
+
+  subtotal      Decimal @db.Decimal(12, 2)
+  tax           Decimal @default(0) @db.Decimal(12, 2)
+  discount      Decimal @default(0) @db.Decimal(12, 2)
+  total         Decimal @db.Decimal(12, 2)
+  paidAmount    Decimal @default(0) @db.Decimal(12, 2)
+  pendingAmount Decimal @db.Decimal(12, 2)
+
+  description String?
+  issueDate   DateTime  @default(now())
+  dueDate     DateTime
+
+  createdById String?
+  createdBy   AdminUser? @relation("InvoiceCreatedBy", fields: [createdById], references: [id])
+
+  pdfAssetId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  payments Payment[]
+  payouts  Payout[]
+
+  @@map("invoices")
+}
+
+enum PaymentStatus {
+  RECORDED
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  paymentNumber         String        @unique
+  invoiceId             String
+  invoice               Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  payer                 String
+  amount                Decimal       @db.Decimal(12, 2)
+  paymentDate           DateTime      @default(now())
+  method                String
+  transactionReference  String?
+  utr                   String?
+  status                PaymentStatus @default(RECORDED)
+  notes                 String?
+  receiptPdfAssetId     String?
+  createdAt             DateTime      @default(now())
+
+  @@map("payments")
+}
+
+enum PayoutStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+model Payout {
+  id                   String       @id @default(cuid())
+  payoutNumber         String       @unique
+  creatorId            String
+  creator              Creator      @relation(fields: [creatorId], references: [id])
+  campaignId           String?
+  campaign             Campaign?    @relation(fields: [campaignId], references: [id])
+  invoiceId            String?
+  invoice              Invoice?     @relation(fields: [invoiceId], references: [id])
+
+  grossAmount          Decimal      @db.Decimal(12, 2)
+  commissionPercentage Decimal      @db.Decimal(5, 2)
+  commissionAmount     Decimal      @db.Decimal(12, 2)
+  creatorAmount        Decimal      @db.Decimal(12, 2)
+  adjustment           Decimal      @default(0) @db.Decimal(12, 2)
+  netPayable           Decimal      @db.Decimal(12, 2)
+  paidAmount           Decimal      @default(0) @db.Decimal(12, 2)
+  pendingAmount        Decimal      @db.Decimal(12, 2)
+
+  status               PayoutStatus @default(PENDING)
+  paymentDate          DateTime?
+  transactionReference String?
+  statementPdfAssetId  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payouts")
+}
+
+// ---------------------------------------------------------------------------
+// Creator Email / Inbox
+// ---------------------------------------------------------------------------
+
+enum EmailAccountStatus {
+  ACTIVE
+  DISABLED
+}
+
+model CreatorEmailAccount {
+  id            String              @id @default(cuid())
+  creatorId     String
+  creator       Creator             @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  emailAddress  String              @unique
+  localPart     String
+  domain        String              @default("vidlix.in")
+  status        EmailAccountStatus  @default(ACTIVE)
+  createdAt     DateTime            @default(now())
+
+  threads EmailThread[]
+
+  @@map("creator_email_accounts")
+}
+
+enum ThreadStatus {
+  OPEN
+  ARCHIVED
+  SPAM
+}
+
+model EmailThread {
+  id                    String       @id @default(cuid())
+  creatorEmailAccountId String
+  creatorEmailAccount   CreatorEmailAccount @relation(fields: [creatorEmailAccountId], references: [id], onDelete: Cascade)
+  subject               String
+  status                ThreadStatus @default(OPEN)
+  starred               Boolean      @default(false)
+  lastMessageAt         DateTime     @default(now())
+  createdAt             DateTime     @default(now())
+
+  messages EmailMessage[]
+
+  @@map("email_threads")
+}
+
+enum EmailDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum EmailMessageStatus {
+  SENT
+  DELIVERED
+  FAILED
+  RECEIVED
+}
+
+model EmailMessage {
+  id               String             @id @default(cuid())
+  threadId         String
+  thread           EmailThread        @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  providerMessageId String?
+  fromEmail        String
+  toEmail          String
+  cc               String?
+  subject          String
+  htmlBody         String?
+  textBody         String?
+  direction        EmailDirection
+  status           EmailMessageStatus @default(SENT)
+  receivedAt       DateTime?
+  sentAt           DateTime?
+  createdAt        DateTime           @default(now())
+
+  @@map("email_messages")
+}
+
+// Outbound transactional email log (mocked send in local prototype)
+enum EmailLogStatus {
+  SENT
+  FAILED
+  MOCKED
+}
+
+model EmailLog {
+  id        String         @id @default(cuid())
+  toEmail   String
+  fromEmail String
+  subject   String
+  template  String?
+  body      String
+  status    EmailLogStatus @default(MOCKED)
+  error     String?
+  createdAt DateTime       @default(now())
+
+  @@map("email_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Documents / Activity
+// ---------------------------------------------------------------------------
+
+enum DocumentCategory {
+  AGREEMENT
+  INVOICE
+  RECEIPT
+  PAYOUT_STATEMENT
+  NDA
+  CONTRACT
+  IDENTITY
+  OTHER
+}
+
+model Document {
+  id          String           @id @default(cuid())
+  creatorId   String?
+  creator     Creator?         @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  agreementId String?
+  agreement   Agreement?       @relation(fields: [agreementId], references: [id], onDelete: SetNull)
+  category    DocumentCategory
+  title       String
+  assetId     String           // storage reference
+  createdAt   DateTime         @default(now())
+
+  @@map("documents")
+}
+
+model ActivityLog {
+  id         String    @id @default(cuid())
+  actorId    String?
+  actor      AdminUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime  @default(now())
+
+  creatorId String?
+  creator   Creator? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+
+  @@map("activity_logs")
+}
