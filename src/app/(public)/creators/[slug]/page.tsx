@@ -74,7 +74,7 @@ export default async function CreatorProfilePage({
             </p>
             {creator.bio ? <p className="text-neutral-300 mt-3 max-w-xl">{creator.bio}</p> : null}
           </div>
-          <Button asChild size="lg" className="bg-violet-600 hover:bg-violet-700 shrink-0">
+          <Button asChild size="lg" className="bg-violet-600 text-white hover:bg-violet-500 transition-colors shrink-0">
             <Link href={`/brand-inquiry?creatorId=${creator.id}`}>Collaborate with {creator.name.split(" ")[0]}</Link>
           </Button>
         </div>
@@ -147,7 +147,7 @@ export default async function CreatorProfilePage({
       ) : null}
 
       <section className="max-w-3xl mx-auto px-6 pb-24 text-center">
-        <Button asChild size="lg" className="bg-violet-600 hover:bg-violet-700">
+        <Button asChild size="lg" className="bg-violet-600 text-white hover:bg-violet-500 transition-colors">
           <Link href={`/brand-inquiry?creatorId=${creator.id}`}>
             Collaborate with {creator.name.split(" ")[0]} <ArrowRight className="size-4" />
           </Link>

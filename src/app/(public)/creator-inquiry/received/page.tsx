@@ -11,7 +11,7 @@ export default function CreatorInquiryReceivedPage() {
         Your application has been received by VIDLIX. Our team will review your
         information and contact you shortly.
       </p>
-      <Button asChild variant="ghost" className="border border-white/20 text-white hover:bg-white/10">
+      <Button asChild variant="ghost" className="border border-white/20 text-white hover:text-white hover:bg-white/10 transition-colors">
         <Link href="/">Back to Home</Link>
       </Button>
     </div>

@@ -6,15 +6,16 @@ import { Button } from "@/components/ui/button";
 
 export default function CreatorInquiryPage() {
   return (
-    <div className="text-white max-w-2xl mx-auto px-6 py-16">
+    <div className="text-white max-w-2xl mx-auto px-6 py-16 sm:py-20">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold">JOIN VIDLIX</h1>
+        <div className="text-[11px] font-medium tracking-[0.3em] text-violet-400">CREATOR APPLICATION</div>
+        <h1 className="text-3xl sm:text-4xl font-bold mt-4">Join VIDLIX</h1>
         <p className="text-neutral-400 mt-3">
           Tell us about yourself — our team reviews every application personally.
         </p>
       </div>
 
-      <form action={submitCreatorInquiryAction} className="space-y-5">
+      <form action={submitCreatorInquiryAction} className="space-y-5 rounded-2xl border border-white/10 bg-white/[0.02] p-6 sm:p-8">
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Full Name *" name="fullName" required />
           <Field label="Email *" name="email" type="email" required />
@@ -35,7 +36,7 @@ export default function CreatorInquiryPage() {
           <Label className="text-neutral-300">Why do you want VIDLIX to manage you?</Label>
           <Textarea name="reason" rows={3} className="bg-white/5 border-white/10 text-white" />
         </div>
-        <Button type="submit" size="lg" className="w-full bg-violet-600 hover:bg-violet-700">
+        <Button type="submit" size="lg" className="w-full h-11 bg-violet-600 text-white hover:bg-violet-500 shadow-[0_8px_24px_-8px_rgba(124,58,237,0.6)] transition-all">
           Submit Application
         </Button>
       </form>

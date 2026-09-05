@@ -15,7 +15,7 @@ export function CreatorCard({ creator }: { creator: CreatorCardData }) {
   return (
     <Link
       href={`/creators/${creator.slug}`}
-      className="group block rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] transition-colors overflow-hidden"
+      className="group block rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-violet-400/30 hover:-translate-y-1 transition-all overflow-hidden"
     >
       <div className="aspect-[4/5] bg-neutral-900 relative overflow-hidden">
         {creator.profileImage ? (

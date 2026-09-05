@@ -16,9 +16,10 @@ export default async function BrandInquiryPage({
     : null;
 
   return (
-    <div className="text-white max-w-2xl mx-auto px-6 py-16">
+    <div className="text-white max-w-2xl mx-auto px-6 py-16 sm:py-20">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold">Start a Campaign</h1>
+        <div className="text-[11px] font-medium tracking-[0.3em] text-violet-400">BRAND INQUIRY</div>
+        <h1 className="text-3xl sm:text-4xl font-bold mt-4">Start a Campaign</h1>
         <p className="text-neutral-400 mt-3">
           Tell us about your brand and campaign — VIDLIX will connect you with the right creators.
         </p>
@@ -26,11 +27,11 @@ export default async function BrandInquiryPage({
 
       {selectedCreator ? (
         <div className="mb-8 rounded-xl border border-violet-500/30 bg-violet-500/[0.06] px-4 py-3 text-sm text-violet-200">
-          You're inquiring about a collaboration with <strong>{selectedCreator.name}</strong>.
+          You&rsquo;re inquiring about a collaboration with <strong>{selectedCreator.name}</strong>.
         </div>
       ) : null}
 
-      <form action={submitBrandInquiryAction} className="space-y-5">
+      <form action={submitBrandInquiryAction} className="space-y-5 rounded-2xl border border-white/10 bg-white/[0.02] p-6 sm:p-8">
         <input type="hidden" name="creatorId" value={selectedCreator?.id ?? ""} />
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Brand Name *" name="brandName" required />
@@ -56,7 +57,7 @@ export default async function BrandInquiryPage({
           <Label className="text-neutral-300">Additional Requirements</Label>
           <Textarea name="additionalRequirements" rows={3} className="bg-white/5 border-white/10 text-white" />
         </div>
-        <Button type="submit" size="lg" className="w-full bg-violet-600 hover:bg-violet-700">
+        <Button type="submit" size="lg" className="w-full h-11 bg-violet-600 text-white hover:bg-violet-500 shadow-[0_8px_24px_-8px_rgba(124,58,237,0.6)] transition-all">
           Submit Collaboration Request
         </Button>
       </form>

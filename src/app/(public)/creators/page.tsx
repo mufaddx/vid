@@ -41,7 +41,8 @@ export default async function CreatorsDirectoryPage({
   return (
     <div className="text-white max-w-7xl mx-auto px-6 py-16">
       <div className="text-center mb-12">
-        <h1 className="text-3xl sm:text-4xl font-bold">MEET THE CREATORS</h1>
+        <div className="text-[11px] font-medium tracking-[0.3em] text-violet-400">THE ROSTER</div>
+        <h1 className="text-3xl sm:text-5xl font-bold mt-4 text-balance">Meet the Creators</h1>
         <p className="text-neutral-400 mt-3 max-w-xl mx-auto">
           Search by creator name, niche, platform or keyword.
         </p>
@@ -58,14 +59,14 @@ export default async function CreatorsDirectoryPage({
 
       {categories.length > 0 ? (
         <div className="flex flex-wrap items-center justify-center gap-2 mb-12">
-          <a href="/creators" className="text-xs px-3 py-1.5 rounded-full border border-white/10 text-neutral-300 hover:bg-white/10">
+          <a href="/creators" className="text-xs px-3 py-1.5 rounded-full border border-white/10 text-neutral-300 hover:bg-white/10 hover:text-white hover:border-white/25 transition-colors">
             All
           </a>
           {categories.map((c) => (
             <a
               key={c.category}
               href={`/creators?category=${encodeURIComponent(c.category!)}`}
-              className="text-xs px-3 py-1.5 rounded-full border border-white/10 text-neutral-300 hover:bg-white/10"
+              className="text-xs px-3 py-1.5 rounded-full border border-white/10 text-neutral-300 hover:bg-white/10 hover:text-white hover:border-white/25 transition-colors"
             >
               {c.category}
             </a>

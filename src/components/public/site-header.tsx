@@ -44,10 +44,10 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Button asChild variant="ghost" className="text-white hover:bg-white/10">
+          <Button asChild variant="ghost" className="text-white hover:text-white hover:bg-white/10 transition-colors">
             <Link href="/creator-inquiry">Join VIDLIX</Link>
           </Button>
-          <Button asChild className="bg-violet-600 hover:bg-violet-700">
+          <Button asChild className="bg-violet-600 text-white hover:bg-violet-500 transition-colors">
             <Link href="/creators">Find a Creator</Link>
           </Button>
         </div>
@@ -65,10 +65,10 @@ export function SiteHeader() {
             </Link>
           ))}
           <div className="flex gap-2 pt-2">
-            <Button asChild variant="ghost" className="flex-1 border border-white/20 text-white">
+            <Button asChild variant="ghost" className="flex-1 border border-white/20 text-white hover:text-white hover:bg-white/10">
               <Link href="/creator-inquiry">Join VIDLIX</Link>
             </Button>
-            <Button asChild className="flex-1 bg-violet-600 hover:bg-violet-700">
+            <Button asChild className="flex-1 bg-violet-600 text-white hover:bg-violet-500">
               <Link href="/creators">Find a Creator</Link>
             </Button>
           </div>
