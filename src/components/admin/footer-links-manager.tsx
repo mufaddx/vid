@@ -22,19 +22,24 @@ const GROUP_LABELS: Record<FooterLink["group"], string> = {
   GET_STARTED: "Get Started",
 };
 
+// The footer itself only has room for Company / Platform (+ Legal,
+// generated from Legal Pages, and Contact) — Get Started links from
+// older data aren't deleted, just no longer editable/shown here.
+const VISIBLE_GROUPS = ["COMPANY", "PLATFORM"] as const;
+
 export function FooterLinksManager({ links }: { links: FooterLink[] }) {
-  const [group, setGroup] = useState<FooterLink["group"]>("COMPANY");
+  const [group, setGroup] = useState<(typeof VISIBLE_GROUPS)[number]>("COMPANY");
 
   return (
     <section className="space-y-4">
       <div>
         <h3 className="text-sm font-semibold text-neutral-700">Footer Links</h3>
         <p className="text-xs text-neutral-400 mt-1">
-          Manage the Company / Platform / Get Started link groups shown in the website footer. The Legal group is generated automatically from Legal Pages.
+          Manage the Company / Platform link groups shown in the website footer. The Legal group is generated automatically from Legal Pages, and Contact comes from the fields above.
         </p>
       </div>
 
-      {(["COMPANY", "PLATFORM", "GET_STARTED"] as const).map((g) => (
+      {VISIBLE_GROUPS.map((g) => (
         <div key={g} className="rounded-xl border border-neutral-200 bg-white p-4">
           <div className="text-xs font-semibold text-neutral-500 mb-3">{GROUP_LABELS[g].toUpperCase()}</div>
           <div className="space-y-2">
@@ -62,10 +67,10 @@ export function FooterLinksManager({ links }: { links: FooterLink[] }) {
         <input type="hidden" name="group" value={group} />
         <div className="space-y-1">
           <Label className="text-xs">Group</Label>
-          <Select value={group} onValueChange={(v) => setGroup(v as FooterLink["group"])}>
+          <Select value={group} onValueChange={(v) => setGroup(v as (typeof VISIBLE_GROUPS)[number])}>
             <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {(["COMPANY", "PLATFORM", "GET_STARTED"] as const).map((g) => (
+              {VISIBLE_GROUPS.map((g) => (
                 <SelectItem key={g} value={g}>{GROUP_LABELS[g]}</SelectItem>
               ))}
             </SelectContent>

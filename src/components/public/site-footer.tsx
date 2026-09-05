@@ -3,6 +3,9 @@ import { VidlixWordmark } from "@/components/vidlix-wordmark";
 import { Mail, Phone, MapPin } from "lucide-react";
 
 type FooterLinkItem = { group: "COMPANY" | "PLATFORM" | "GET_STARTED"; label: string; href: string };
+// GET_STARTED is still a valid DB group (existing links aren't deleted),
+// but the footer no longer has room for a 6th block — those inquiry/CTA
+// links live in the header and throughout the page instead.
 type LegalPageItem = { slug: string; title: string };
 type CompanyInfo = {
   phone: string;
@@ -91,7 +94,7 @@ export function SiteFooter({
   const socialLinks = SOCIAL_ICON_DEFS.filter((s) => company?.[s.key]).map((s) => ({ ...s, href: company![s.key]! }));
 
   const groups: { heading: string; links: { href: string; label: string }[] }[] = (
-    ["COMPANY", "PLATFORM", "GET_STARTED"] as const
+    ["COMPANY", "PLATFORM"] as const
   ).map((g) => ({
     heading: GROUP_LABELS[g],
     links: footerLinks.filter((l) => l.group === g),
@@ -117,31 +120,31 @@ export function SiteFooter({
       />
 
       <div className="relative max-w-7xl mx-auto px-6 py-14 sm:py-16">
-        <div className="mb-10">
-          <VidlixWordmark className="text-lg font-bold tracking-widest text-white" xClassName="text-violet-400" />
-          <p className="text-sm text-neutral-400 mt-4 max-w-sm leading-relaxed">
-            Creators, brands &amp; beyond. VIDLIX manages exceptional creators
-            and connects them with ambitious brands.
-          </p>
-          {socialLinks.length > 0 ? (
-            <div className="flex items-center gap-2 mt-6">
-              {socialLinks.map((s) => (
-                <a
-                  key={s.label}
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={s.label}
-                  className="flex items-center justify-center size-9 rounded-full border border-white/10 bg-white/[0.03] text-neutral-400 transition-all hover:text-violet-300 hover:border-violet-400/40 hover:bg-violet-500/10 hover:-translate-y-0.5"
-                >
-                  {s.svg}
-                </a>
-              ))}
-            </div>
-          ) : null}
-        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-x-6 gap-y-10 lg:gap-8">
+          <div className="col-span-2 lg:col-span-1">
+            <VidlixWordmark className="text-lg font-bold tracking-widest text-white" xClassName="text-violet-400" />
+            <p className="text-sm text-neutral-400 mt-4 max-w-sm leading-relaxed">
+              Creators, brands &amp; beyond. VIDLIX manages exceptional creators
+              and connects them with ambitious brands.
+            </p>
+            {socialLinks.length > 0 ? (
+              <div className="flex items-center gap-2 mt-6">
+                {socialLinks.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="flex items-center justify-center size-9 rounded-full border border-white/10 bg-white/[0.03] text-neutral-400 transition-all hover:text-violet-300 hover:border-violet-400/40 hover:bg-violet-500/10 hover:-translate-y-0.5"
+                  >
+                    {s.svg}
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-10">
           {groups.map((group) => (
             <div key={group.heading} className="min-w-0">
               <div className="text-xs font-semibold tracking-widest text-neutral-500 mb-4">
@@ -158,23 +161,27 @@ export function SiteFooter({
               </ul>
             </div>
           ))}
-        </div>
 
-        <div className="mt-10 pt-8 border-t border-white/10">
-          <div className="text-xs font-semibold tracking-widest text-neutral-500 mb-4">CONTACT</div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-neutral-400">
-            <a href={`tel:${contact.phone.replace(/\s+/g, "")}`} className="flex items-start gap-2.5 min-w-0 transition-colors hover:text-white">
-              <Phone className="size-4 mt-0.5 shrink-0 text-violet-400" />
-              <span className="break-words">{contact.phone}</span>
-            </a>
-            <a href={`mailto:${contact.email}`} className="flex items-start gap-2.5 min-w-0 transition-colors hover:text-white">
-              <Mail className="size-4 mt-0.5 shrink-0 text-violet-400" />
-              <span className="break-words">{contact.email}</span>
-            </a>
-            <span className="flex items-start gap-2.5 min-w-0">
-              <MapPin className="size-4 mt-0.5 shrink-0 text-violet-400" />
-              <span className="break-words">{contact.address}</span>
-            </span>
+          <div className="min-w-0">
+            <div className="text-xs font-semibold tracking-widest text-neutral-500 mb-4">CONTACT</div>
+            <ul className="space-y-3 text-sm text-neutral-400">
+              <li>
+                <a href={`tel:${contact.phone.replace(/\s+/g, "")}`} className="flex items-start gap-2 min-w-0 transition-colors hover:text-white">
+                  <Phone className="size-4 mt-0.5 shrink-0 text-violet-400" />
+                  <span className="break-words">{contact.phone}</span>
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${contact.email}`} className="flex items-start gap-2 min-w-0 transition-colors hover:text-white">
+                  <Mail className="size-4 mt-0.5 shrink-0 text-violet-400" />
+                  <span className="break-words">{contact.email}</span>
+                </a>
+              </li>
+              <li className="flex items-start gap-2 min-w-0">
+                <MapPin className="size-4 mt-0.5 shrink-0 text-violet-400" />
+                <span className="break-words">{contact.address}</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
