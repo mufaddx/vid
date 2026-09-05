@@ -9,6 +9,7 @@ export type SendEmailInput = {
   subject: string;
   html: string;
   template?: string;
+  from?: string; // overrides EMAIL_FROM — e.g. a specific creator mailbox
 };
 
 /**
@@ -20,26 +21,27 @@ export type SendEmailInput = {
  */
 export async function sendEmail(input: SendEmailInput): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
+  const from = input.from || FROM;
 
   if (!apiKey) {
     await prisma.emailLog.create({
       data: {
         toEmail: input.to,
-        fromEmail: FROM,
+        fromEmail: from,
         subject: input.subject,
         template: input.template,
         body: input.html,
         status: "MOCKED",
       },
     });
-    console.log(`[email:mocked] to=${input.to} subject="${input.subject}"`);
+    console.log(`[email:mocked] from=${from} to=${input.to} subject="${input.subject}"`);
     return;
   }
 
   try {
     const resend = new Resend(apiKey);
     await resend.emails.send({
-      from: FROM,
+      from,
       to: input.to,
       subject: input.subject,
       html: input.html,
@@ -47,7 +49,7 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
     await prisma.emailLog.create({
       data: {
         toEmail: input.to,
-        fromEmail: FROM,
+        fromEmail: from,
         subject: input.subject,
         template: input.template,
         body: input.html,
@@ -58,7 +60,7 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
     await prisma.emailLog.create({
       data: {
         toEmail: input.to,
-        fromEmail: FROM,
+        fromEmail: from,
         subject: input.subject,
         template: input.template,
         body: input.html,

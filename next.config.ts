@@ -5,6 +5,31 @@ const nextConfig: NextConfig = {
   // Dev container is reached via 127.0.0.1 (and the host's LAN address),
   // which Next's dev server treats as cross-origin for HMR by default.
   allowedDevOrigins: ["127.0.0.1", "localhost"],
+
+  // Hostinger's edge CDN sits in front of the app and was caching HTML
+  // page responses. Every deploy renames the hashed JS/CSS chunk files
+  // (old ones are removed), so a cached HTML page from before a deploy
+  // still references asset URLs that now 404 — which is exactly what an
+  // unstyled/broken page on refresh looks like. Static, content-hashed
+  // assets are safe to cache forever; every actual page response must
+  // never be cached by an intermediate CDN so it always gets the HTML
+  // that matches the currently-live build's asset hashes.
+  async headers() {
+    // Order matters: when multiple entries match the same path, Next.js
+    // applies the LAST one for a repeated header key — so the catch-all
+    // (no-cache) has to come first, and the static-assets override
+    // (immutable, long-lived) second, so it actually wins for those paths.
+    return [
+      {
+        source: "/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-cache, no-store, must-revalidate" }],
+      },
+      {
+        source: "/_next/static/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

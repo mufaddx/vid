@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/page-header";
 import { SettingsForm } from "@/components/admin/settings-form";
 import { FooterLinksManager } from "@/components/admin/footer-links-manager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default async function SettingsPage() {
   const [company, footerLinks] = await Promise.all([
@@ -12,11 +13,23 @@ export default async function SettingsPage() {
   return (
     <div>
       <PageHeader title="Settings" description="Company profile, letterhead and billing defaults" />
-      <div className="p-8 max-w-2xl space-y-10">
-        {/* Prisma's Decimal isn't a plain object — serialize before crossing
-            the server/client boundary (spec-agnostic RSC requirement). */}
-        <SettingsForm company={{ ...company, defaultCommissionPct: Number(company.defaultCommissionPct) }} />
-        <FooterLinksManager links={footerLinks} />
+      <div className="p-8">
+        <Tabs defaultValue="general" className="max-w-3xl">
+          <TabsList>
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="footer">Website Footer</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general">
+            {/* Prisma's Decimal isn't a plain object — serialize before crossing
+                the server/client boundary (spec-agnostic RSC requirement). */}
+            <SettingsForm company={{ ...company, defaultCommissionPct: Number(company.defaultCommissionPct) }} />
+          </TabsContent>
+
+          <TabsContent value="footer">
+            <FooterLinksManager links={footerLinks} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

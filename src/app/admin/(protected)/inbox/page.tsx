@@ -2,21 +2,37 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { ComposeDialog } from "@/components/admin/inbox/compose-dialog";
 import { timeAgo } from "@/lib/format";
 import { Inbox } from "lucide-react";
 
 export default async function InboxPage() {
-  const threads = await prisma.emailThread.findMany({
-    include: {
-      creatorEmailAccount: { include: { creator: true } },
-      messages: { orderBy: { createdAt: "desc" }, take: 1 },
-    },
-    orderBy: { lastMessageAt: "desc" },
-  });
+  const [threads, mailboxes] = await Promise.all([
+    prisma.emailThread.findMany({
+      include: {
+        creatorEmailAccount: { include: { creator: true } },
+        messages: { orderBy: { createdAt: "desc" }, take: 1 },
+      },
+      orderBy: { lastMessageAt: "desc" },
+    }),
+    prisma.creatorEmailAccount.findMany({
+      where: { status: "ACTIVE" },
+      include: { creator: { select: { name: true } } },
+      orderBy: { emailAddress: "asc" },
+    }),
+  ]);
 
   return (
     <div>
-      <PageHeader title="Inbox" description="Unified inbox across every creator mailbox" />
+      <PageHeader
+        title="Inbox"
+        description="Unified inbox across every creator mailbox"
+        actions={
+          <ComposeDialog
+            mailboxes={mailboxes.map((m) => ({ id: m.id, emailAddress: m.emailAddress, creatorName: m.creator.name }))}
+          />
+        }
+      />
       <div className="p-8">
         {threads.length === 0 ? (
           <EmptyState icon={Inbox} title="No emails in this inbox" description="Threads from brand communications will appear here." />
