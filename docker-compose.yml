@@ -1,15 +1,16 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: mysql:8.0
     restart: unless-stopped
     environment:
-      POSTGRES_USER: vidlix
-      POSTGRES_PASSWORD: vidlix
-      POSTGRES_DB: vidlix
+      MYSQL_ROOT_PASSWORD: vidlixroot
+      MYSQL_DATABASE: vidlix
+      MYSQL_USER: vidlix
+      MYSQL_PASSWORD: vidlix
     ports:
-      - "55432:5432"
+      - "33306:3306"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/mysql
 
   app:
     image: node:20-bookworm
@@ -19,7 +20,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://vidlix:vidlix@db:5432/vidlix
+      DATABASE_URL: mysql://vidlix:vidlix@db:3306/vidlix
     command: tail -f /dev/null
     depends_on:
       - db

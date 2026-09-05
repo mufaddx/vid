@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { VidlixWordmark } from "@/components/vidlix-wordmark";
 
 const NAV = [
   { href: "/", label: "Home" },
@@ -24,7 +25,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="text-lg font-bold tracking-widest text-white">
-          VIDLIX
+          <VidlixWordmark xClassName="text-violet-400" />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">

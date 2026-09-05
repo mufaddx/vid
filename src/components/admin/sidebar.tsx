@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logoutAction } from "@/server/actions/auth";
+import { VidlixWordmark } from "@/components/vidlix-wordmark";
 import type { SessionAdmin } from "@/lib/auth";
 
 const NAV = [
@@ -45,7 +46,7 @@ export function AdminSidebar({ admin }: { admin: SessionAdmin }) {
   return (
     <aside className="w-64 shrink-0 h-screen sticky top-0 flex flex-col bg-neutral-950 border-r border-neutral-800 text-neutral-300">
       <div className="px-5 py-6">
-        <div className="text-lg font-bold tracking-widest text-white">VIDLIX</div>
+        <VidlixWordmark className="text-lg font-bold tracking-widest text-white" xClassName="text-violet-400" />
         <div className="text-[10px] tracking-[0.2em] text-violet-400 mt-1">ADMIN PANEL</div>
       </div>
       <nav className="flex-1 overflow-y-auto px-3 space-y-0.5">

@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { VidlixWordmark } from "@/components/vidlix-wordmark";
 
 export function SiteFooter() {
   return (
     <footer className="bg-neutral-950 border-t border-white/10 text-neutral-400">
       <div className="max-w-7xl mx-auto px-6 py-14 grid gap-10 sm:grid-cols-2 md:grid-cols-4">
         <div>
-          <div className="text-lg font-bold tracking-widest text-white">VIDLIX</div>
+          <VidlixWordmark className="text-lg font-bold tracking-widest text-white" xClassName="text-violet-400" />
           <p className="text-sm mt-3 max-w-xs">
             Creators, brands & beyond. VIDLIX manages exceptional creators and
             connects them with ambitious brands.

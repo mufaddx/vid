@@ -56,14 +56,29 @@ thread demonstrating the creator↔brand email mapping.
 - **Admin — Creators**: CRUD, social account metrics, financial summary,
   central profile with quick actions (spec §150).
 - **Admin — Brands/Campaigns/Collaborations**: CRUD and cross-linking.
-- **Agreements**: template-driven creation with auto-populated smart
-  variables, section editor with live A4-style preview, admin e-signature,
-  send-for-signature email, full audit trail, agreement numbering
-  (`AGR-2026-00001`, never reused).
+- **Agreements** — two structured, purpose-built types plus a legacy
+  template path, all sharing the same numbering (`AGR-2026-00001`, never
+  reused), audit trail, and one-page A4 PDF letterhead:
+  - **Creator Management Agreement** (VIDLIX ↔ Creator): commission %,
+    monthly management fee (or FREE), structured additional services with
+    per-item charge type/amount.
+  - **Brand Collaboration Agreement** (Brand × VIDLIX × Creator):
+    structured deliverables and paid-advertising-usage line items with
+    server-computed totals (never hand-typed), a dedicated brand signing
+    link alongside the creator's, and a visible three-party relationship
+    banner on both the PDF and the agreements list.
+  - **Custom / Other** (`/admin/agreements/new/custom`): the original
+    template-driven, free-text section editor — used for NDAs and other
+    one-off documents.
+  - Both structured types enforce a one-page budget: the create/edit forms
+    cap item counts and surface "Commercial details exceed the one-page
+    layout…" rather than letting a PDF silently overflow to page 2.
 - **Creator-facing signing flow** (`/agreement/sign/[token]`): no login —
-  review document → OTP email verification → draw/type signature → the
-  final signed PDF is generated and locked automatically once both parties
-  have signed.
+  review document → OTP email verification → draw/type signature. Creator
+  Management needs VIDLIX + Creator; Brand Collaboration needs Brand +
+  VIDLIX + Creator, each with their own secure link. The final signed PDF
+  is generated and locked automatically once every required party has
+  signed.
 - **Billing**: invoice creation (creator management & brand campaign),
   PDF generation, payment recording with receipts, payouts with an
   explicit gross/commission/creator-share split (never a single "net"

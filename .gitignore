@@ -45,3 +45,6 @@ next-env.d.ts
 
 # throwaway screenshots from scripts/screenshots.mjs
 scripts/shot-*.png
+
+# Claude Code session artifacts
+.claude/

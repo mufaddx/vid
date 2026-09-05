@@ -203,6 +203,11 @@ export async function tryCompleteAgreement(agreementId: string): Promise<void> {
     include: { creator: true, brand: true, signatures: true },
   });
 
+  // Structured agreements (Creator Management / Brand Collaboration) are
+  // completed via tryCompleteStructuredAgreement instead — this legacy
+  // path only ever applies to free-text `content` agreements.
+  if (agreement.details) return;
+
   const hasAdmin = agreement.signatures.some((s) => s.signerType === "ADMIN");
   const hasCreator = agreement.signatures.some((s) => s.signerType === "CREATOR");
   if (!hasAdmin || !hasCreator || agreement.status === "COMPLETED") return;
@@ -216,14 +221,16 @@ export async function tryCompleteAgreement(agreementId: string): Promise<void> {
     date: agreement.createdAt,
     creatorName: agreement.creator.name,
     brandName: agreement.brand?.name,
-    content: agreement.content,
-    signatures: agreement.signatures.map((s) => ({
-      signerType: s.signerType,
-      signerName: s.signerName,
-      signedAt: s.signedAt,
-      method: s.method,
-      signatureAsset: s.signatureAsset,
-    })),
+    content: agreement.content ?? "[]",
+    signatures: agreement.signatures
+      .filter((s): s is typeof s & { signerType: "ADMIN" | "CREATOR" } => s.signerType !== "BRAND")
+      .map((s) => ({
+        signerType: s.signerType,
+        signerName: s.signerName,
+        signedAt: s.signedAt,
+        method: s.method,
+        signatureAsset: s.signatureAsset,
+      })),
   });
 
   const assetId = await saveFile(pdfBuffer, {

@@ -14,7 +14,10 @@ export default async function AdminProtectedLayout({
   return (
     <div className="flex min-h-screen bg-neutral-50">
       <AdminSidebar admin={session} />
-      <main className="flex-1 min-w-0">{children}</main>
+      {/* Capped width so the page doesn't stretch edge-to-edge into a bare
+          strip on wide monitors — PageHeader and each page's own content
+          div both sit inside this, so they stay visually aligned. */}
+      <main className="flex-1 min-w-0 max-w-[1400px] mx-auto">{children}</main>
       <Toaster />
     </div>
   );

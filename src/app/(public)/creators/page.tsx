@@ -13,12 +13,16 @@ export default async function CreatorsDirectoryPage({
   const creators = await prisma.creator.findMany({
     where: {
       status: "ACTIVE",
+      // No `mode: "insensitive"` here — that's a Postgres-only Prisma
+      // option. MySQL's default utf8mb4 collation (*_ci = case-insensitive)
+      // already makes `contains` case-insensitive, so plain `contains`
+      // behaves the same way without it.
       ...(q
         ? {
             OR: [
-              { name: { contains: q, mode: "insensitive" } },
-              { category: { contains: q, mode: "insensitive" } },
-              { city: { contains: q, mode: "insensitive" } },
+              { name: { contains: q } },
+              { category: { contains: q } },
+              { city: { contains: q } },
             ],
           }
         : {}),

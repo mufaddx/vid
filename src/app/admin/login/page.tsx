@@ -5,6 +5,7 @@ import { loginAction, type LoginState } from "@/server/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { VidlixWordmark } from "@/components/vidlix-wordmark";
 
 export default function AdminLoginPage() {
   const [state, formAction, pending] = useActionState<LoginState, FormData>(
@@ -16,7 +17,7 @@ export default function AdminLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-neutral-950 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-2xl font-bold tracking-widest text-white">VIDLIX</div>
+          <VidlixWordmark className="text-2xl font-bold tracking-widest text-white" xClassName="text-violet-400" />
           <div className="text-[11px] tracking-[0.2em] text-violet-400 mt-1">
             SUPER ADMIN PANEL
           </div>

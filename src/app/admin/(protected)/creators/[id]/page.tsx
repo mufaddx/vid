@@ -52,42 +52,42 @@ export default async function CreatorDetailPage({
 
   return (
     <div>
-      <div className="p-8">
-        <div className="flex items-start justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
-            <Avatar className="size-16">
-              <AvatarImage src={creator.profileImage ?? undefined} />
-              <AvatarFallback className="text-lg">{creator.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-neutral-900">{creator.name}</h1>
-                <StatusBadge status={creator.status} />
-                {creator.featured ? <StatusBadge status="ACTIVE" /> : null}
-              </div>
-              <div className="text-sm text-neutral-500 mt-0.5">
-                {creator.category ?? "Uncategorized"} · {creator.city ?? "—"}
+      <Tabs defaultValue="overview">
+        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 border-b border-violet-100 px-8 pt-8">
+          <div className="flex items-start justify-between gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              <Avatar className="size-16 ring-2 ring-violet-100">
+                <AvatarImage src={creator.profileImage ?? undefined} />
+                <AvatarFallback className="text-lg bg-violet-50 text-violet-700">{creator.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-semibold text-neutral-900">{creator.name}</h1>
+                  <StatusBadge status={creator.status} />
+                  {creator.featured ? <StatusBadge status="ACTIVE" /> : null}
+                </div>
+                <div className="text-sm text-neutral-500 mt-0.5">
+                  {creator.category ?? "Uncategorized"} · {creator.city ?? "—"}
+                </div>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline">
+                <Link href={`/admin/creators/${id}/edit`}>Edit</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={`/admin/agreements/new?creatorId=${id}`}>
+                  <FileSignature className="size-4" /> Create Agreement
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href={`/admin/billing/invoices/new?creatorId=${id}`}>
+                  <Receipt className="size-4" /> Create Invoice
+                </Link>
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline">
-              <Link href={`/admin/creators/${id}/edit`}>Edit</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href={`/admin/agreements/new?creatorId=${id}`}>
-                <FileSignature className="size-4" /> Create Agreement
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link href={`/admin/billing/invoices/new?creatorId=${id}`}>
-                <Receipt className="size-4" /> Create Invoice
-              </Link>
-            </Button>
-          </div>
-        </div>
 
-        <Tabs defaultValue="overview">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="social">Social</TabsTrigger>
@@ -97,8 +97,11 @@ export default async function CreatorDetailPage({
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
+        </div>
 
-          <TabsContent value="overview" className="space-y-6 pt-6">
+        <div className="p-8">
+
+          <TabsContent value="overview" className="space-y-6">
             <div className="grid md:grid-cols-3 gap-4">
               <div className="rounded-xl border border-violet-200 bg-violet-50 p-5 md:col-span-1">
                 <div className="text-xs font-medium text-violet-700">Total Audience</div>
@@ -143,11 +146,11 @@ export default async function CreatorDetailPage({
             </div>
           </TabsContent>
 
-          <TabsContent value="social" className="pt-6">
+          <TabsContent value="social">
             <SocialPanel creatorId={id} accounts={creator.socialAccounts} />
           </TabsContent>
 
-          <TabsContent value="agreements" className="pt-6 space-y-4">
+          <TabsContent value="agreements" className="space-y-4">
             <div className="flex justify-end">
               <Button asChild size="sm">
                 <Link href={`/admin/agreements/new?creatorId=${id}`}>New Agreement</Link>
@@ -187,7 +190,7 @@ export default async function CreatorDetailPage({
             )}
           </TabsContent>
 
-          <TabsContent value="billing" className="pt-6 space-y-6">
+          <TabsContent value="billing" className="space-y-6">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-neutral-700">Invoices</h3>
@@ -283,11 +286,11 @@ export default async function CreatorDetailPage({
             </div>
           </TabsContent>
 
-          <TabsContent value="email" className="pt-6">
+          <TabsContent value="email">
             <EmailPanel creatorId={id} accounts={creator.emailAccounts} />
           </TabsContent>
 
-          <TabsContent value="documents" className="pt-6">
+          <TabsContent value="documents">
             {documents.length === 0 ? (
               <EmptyState icon={FolderOpen} title="No documents yet" />
             ) : (
@@ -308,7 +311,7 @@ export default async function CreatorDetailPage({
             )}
           </TabsContent>
 
-          <TabsContent value="activity" className="pt-6">
+          <TabsContent value="activity">
             {activityLogs.length === 0 ? (
               <EmptyState icon={ActivityIcon} title="No activity recorded yet" />
             ) : (
@@ -322,8 +325,8 @@ export default async function CreatorDetailPage({
               </div>
             )}
           </TabsContent>
-        </Tabs>
-      </div>
+        </div>
+      </Tabs>
     </div>
   );
 }

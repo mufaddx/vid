@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { SignaturePad } from "@/components/signature-pad";
 import {
@@ -12,6 +11,9 @@ import {
   submitCreatorSignatureAction,
 } from "@/server/actions/signing";
 import type { AgreementSection } from "@/lib/agreement-content";
+import type { CreatorManagementDetails, BrandCollaborationDetails } from "@/lib/agreement-details";
+import { StructuredAgreementSummary } from "@/components/signing/structured-summary";
+import { VidlixWordmark } from "@/components/vidlix-wordmark";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 
 type Step = "review" | "otp" | "sign" | "done";
@@ -23,9 +25,13 @@ export function SigningFlow({
   typeLabel,
   date,
   creatorName,
+  creatorAddress,
   brandName,
   sections,
+  structured,
   maskedEmail,
+  signerRole,
+  signerDisplayName,
   alreadySigned,
   finalPdfAssetId,
 }: {
@@ -35,9 +41,17 @@ export function SigningFlow({
   typeLabel: string;
   date: string;
   creatorName: string;
+  creatorAddress?: string;
   brandName?: string;
   sections: AgreementSection[];
+  structured?: {
+    type: "CREATOR_MANAGEMENT" | "BRAND_COLLABORATION";
+    details: CreatorManagementDetails | BrandCollaborationDetails;
+    commissionPercentage: number;
+  };
   maskedEmail: string;
+  signerRole: "CREATOR" | "BRAND";
+  signerDisplayName: string;
   alreadySigned: boolean;
   finalPdfAssetId: string | null;
 }) {
@@ -67,9 +81,13 @@ export function SigningFlow({
       <Shell>
         <div className="text-center py-6">
           <CheckCircle2 className="size-12 text-emerald-500 mx-auto mb-4" />
-          <h1 className="text-lg font-semibold text-neutral-900">Agreement Completed</h1>
+          <h1 className="text-lg font-semibold text-neutral-900">
+            {downloadAssetId ? "Agreement Completed" : "Signature Recorded"}
+          </h1>
           <p className="text-sm text-neutral-500 mt-2">
-            Your agreement {agreementNumber} has been successfully completed.
+            {downloadAssetId
+              ? `Your agreement ${agreementNumber} has been successfully completed.`
+              : `Thank you — your signature on agreement ${agreementNumber} has been recorded. It will be finalized once every party has signed.`}
           </p>
           {downloadAssetId ? (
             <Button asChild className="mt-6">
@@ -85,9 +103,16 @@ export function SigningFlow({
 
   return (
     <Shell>
-      <div className="mb-5">
-        <div className="text-xs text-neutral-400">Agreement No.</div>
-        <div className="font-semibold text-neutral-900">{agreementNumber}</div>
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <div className="text-xs text-neutral-400">Agreement No.</div>
+          <div className="font-semibold text-neutral-900">{agreementNumber}</div>
+        </div>
+        {signerRole === "BRAND" ? (
+          <span className="text-[10px] tracking-wide font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded-full px-2.5 py-1">
+            SIGNING AS BRAND
+          </span>
+        ) : null}
       </div>
 
       {step === "review" ? (
@@ -95,16 +120,29 @@ export function SigningFlow({
           <div className="border border-neutral-200 rounded-xl bg-white p-6 max-h-[50vh] overflow-y-auto text-sm leading-relaxed">
             <div className="font-bold text-base mb-1">{typeLabel.toUpperCase()}</div>
             <div className="text-xs text-neutral-400 mb-4">
-              {date} · {creatorName}{brandName ? ` · ${brandName}` : ""}
+              {date} · {creatorName}
+              {brandName ? ` · ${brandName}` : ""}
             </div>
-            {sections.map((s) => (
-              <div key={s.id} className="mb-4">
-                <div className="font-semibold mb-1">{s.heading}</div>
-                {s.body.split("\n\n").filter((p) => p.trim() && p.trim() !== "---").map((p, i) => (
-                  <p key={i} className="mb-1.5 text-neutral-700">{p}</p>
-                ))}
-              </div>
-            ))}
+            {structured ? (
+              <StructuredAgreementSummary
+                type={structured.type}
+                details={structured.details}
+                agreementNumber={agreementNumber}
+                creatorName={creatorName}
+                creatorAddress={creatorAddress}
+                brandName={brandName}
+                commissionPercentage={structured.commissionPercentage}
+              />
+            ) : (
+              sections.map((s) => (
+                <div key={s.id} className="mb-4">
+                  <div className="font-semibold mb-1">{s.heading}</div>
+                  {s.body.split("\n\n").filter((p) => p.trim() && p.trim() !== "---").map((p, i) => (
+                    <p key={i} className="mb-1.5 text-neutral-700">{p}</p>
+                  ))}
+                </div>
+              ))
+            )}
           </div>
           <Button className="w-full mt-4" onClick={() => setStep("otp")}>
             Continue to Verification
@@ -144,9 +182,11 @@ export function SigningFlow({
           <div className="flex items-center gap-2 text-emerald-600 text-sm mb-4">
             <ShieldCheck className="size-4" /> Identity verified
           </div>
-          <h2 className="text-sm font-semibold text-neutral-800 mb-3">CREATOR SIGNATURE</h2>
+          <h2 className="text-sm font-semibold text-neutral-800 mb-3">
+            {signerRole === "BRAND" ? "BRAND SIGNATURE" : "CREATOR SIGNATURE"}
+          </h2>
           <SignaturePad
-            defaultName={creatorName}
+            defaultName={signerDisplayName}
             confirmLabel={pending ? "Submitting…" : "Apply Signature"}
             onCapture={({ signerName, method, signatureAsset }) =>
               startTransition(async () => {
@@ -236,7 +276,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-neutral-50 py-10 px-4">
       <div className="max-w-xl mx-auto">
         <div className="text-center mb-6">
-          <div className="text-xl font-bold tracking-widest text-neutral-900">VIDLIX</div>
+          <VidlixWordmark className="text-xl font-bold tracking-widest text-neutral-900" />
           <div className="text-[10px] tracking-[0.2em] text-violet-500 mt-1">SECURE AGREEMENT SIGNING</div>
         </div>
         <div className="bg-white border border-neutral-200 rounded-2xl p-6 sm:p-8">{children}</div>

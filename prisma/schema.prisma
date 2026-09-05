@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -76,8 +76,8 @@ model CompanySettings {
   agreementPrefix        String   @default("AGR")
   defaultCommissionPct   Decimal  @default(30) @db.Decimal(5, 2)
   defaultDueDays         Int      @default(30)
-  bankDetails            String?
-  upiDetails             String?
+  bankDetails            String?  @db.Text
+  upiDetails             String?  @db.Text
   updatedAt              DateTime @updatedAt
 
   @@map("company_settings")
@@ -117,11 +117,11 @@ model Creator {
   city                  String?
   state                 String?
   country               String        @default("India")
-  bio                   String?
-  longBio               String?
+  bio                   String?       @db.Text
+  longBio               String?       @db.Text
   journeyStartYear      Int?
   category              String?
-  languages             String[]      @default([])
+  languages             Json          @default("[]") // string[] — MySQL has no native array type
   status                CreatorStatus @default(PENDING)
   featured              Boolean       @default(false)
   orbitPriority         Int           @default(0)
@@ -152,7 +152,7 @@ model CreatorJourneyEntry {
   creator     Creator @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   year        Int
   title       String
-  description String?
+  description String? @db.Text
   order       Int     @default(0)
   visible     Boolean @default(true)
 
@@ -182,7 +182,7 @@ model SocialAccount {
   connectionStatus     ConnectionStatus @default(NOT_CONNECTED)
   accessTokenRef       String?          // reference/id into a secrets store — never the raw token
   lastSyncedAt         DateTime?
-  lastSyncError        String?
+  lastSyncError        String?          @db.Text
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
 
@@ -249,7 +249,7 @@ model Brand {
   website       String?
   address       String?
   industry      String?
-  notes         String?
+  notes         String?     @db.Text
   status        BrandStatus @default(ACTIVE)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -281,12 +281,12 @@ model Campaign {
   name        String
   brandId     String
   brand       Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  description String?
+  description String?        @db.Text
   startDate   DateTime?
   endDate     DateTime?
   budget      Decimal?       @db.Decimal(12, 2)
   status      CampaignStatus @default(DRAFT)
-  notes       String?
+  notes       String?        @db.Text
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
@@ -318,7 +318,7 @@ model Collaboration {
   brandId    String
   brand      Brand                @relation(fields: [brandId], references: [id], onDelete: Cascade)
   status     CollaborationStatus  @default(NEW)
-  notes      String?
+  notes      String?              @db.Text
   createdAt  DateTime             @default(now())
   updatedAt  DateTime             @updatedAt
 
@@ -369,7 +369,7 @@ model Inquiry {
   phone       String?
   brandName   String?
   website     String?
-  message     String?
+  message     String?       @db.Text
   payload     Json          // full raw form payload for flexibility
   creatorId   String?
   creator     Creator?      @relation(fields: [creatorId], references: [id], onDelete: SetNull)
@@ -405,7 +405,7 @@ model AgreementTemplate {
   name        String
   type        AgreementType
   description String?
-  content     String         // HTML with {{variables}}
+  content     String         @db.Text // HTML with {{variables}}
   status      TemplateStatus @default(DRAFT)
   version     Int            @default(1)
   createdAt   DateTime       @default(now())
@@ -441,13 +441,16 @@ model Agreement {
   template             AgreementTemplate? @relation(fields: [templateId], references: [id])
   status               AgreementStatus   @default(DRAFT)
   version              Int               @default(1)
-  content              String            // rendered HTML snapshot (with variables substituted) for this version
+  content              String?           @db.Text // legacy free-text sections snapshot (older/custom agreements only)
+  details              Json?             // structured data for CREATOR_MANAGEMENT / BRAND_COLLABORATION agreements
   startDate            DateTime?
   endDate              DateTime?
   commissionPercentage Decimal           @default(30) @db.Decimal(5, 2)
 
-  signingToken           String?   @unique
+  signingToken           String?   @unique // creator's secure signing link
   signingTokenExpiresAt  DateTime?
+  brandSigningToken          String?   @unique // brand's secure signing link (BRAND_COLLABORATION only)
+  brandSigningTokenExpiresAt DateTime?
 
   createdById String?
   createdBy   AdminUser? @relation("AgreementCreatedBy", fields: [createdById], references: [id])
@@ -473,6 +476,7 @@ model Agreement {
 enum SignerType {
   ADMIN
   CREATOR
+  BRAND
 }
 
 model Signature {
@@ -483,7 +487,7 @@ model Signature {
   signerName     String
   signerEmail    String?
   method         String     // draw | type | upload
-  signatureAsset String     // data URI or storage reference
+  signatureAsset String     @db.LongText // data URI or storage reference — can be a sizeable base64 PNG
   otpVerified    Boolean    @default(false)
   signedAt       DateTime   @default(now())
   createdAt      DateTime   @default(now())
@@ -557,7 +561,7 @@ model Invoice {
   paidAmount    Decimal @default(0) @db.Decimal(12, 2)
   pendingAmount Decimal @db.Decimal(12, 2)
 
-  description String?
+  description String?   @db.Text
   issueDate   DateTime  @default(now())
   dueDate     DateTime
 
@@ -592,7 +596,7 @@ model Payment {
   transactionReference  String?
   utr                   String?
   status                PaymentStatus @default(RECORDED)
-  notes                 String?
+  notes                 String?       @db.Text
   receiptPdfAssetId     String?
   createdAt             DateTime      @default(now())
 
@@ -704,8 +708,8 @@ model EmailMessage {
   toEmail          String
   cc               String?
   subject          String
-  htmlBody         String?
-  textBody         String?
+  htmlBody         String?            @db.Text
+  textBody         String?            @db.Text
   direction        EmailDirection
   status           EmailMessageStatus @default(SENT)
   receivedAt       DateTime?
@@ -728,9 +732,9 @@ model EmailLog {
   fromEmail String
   subject   String
   template  String?
-  body      String
+  body      String         @db.Text
   status    EmailLogStatus @default(MOCKED)
-  error     String?
+  error     String?        @db.Text
   createdAt DateTime       @default(now())
 
   @@map("email_logs")

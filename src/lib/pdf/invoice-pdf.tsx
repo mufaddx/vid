@@ -1,4 +1,5 @@
-import { Document, renderToBuffer, View, Text, StyleSheet } from "@react-pdf/renderer";
+import { Document, renderToBuffer, View, StyleSheet } from "@react-pdf/renderer";
+import { Text } from "./Text";
 import type { CompanySettings } from "@prisma/client";
 import { LetterheadPage } from "@/lib/pdf/Letterhead";
 import { DocTitle, MetaRow, pdfBlockStyles } from "@/lib/pdf/blocks";

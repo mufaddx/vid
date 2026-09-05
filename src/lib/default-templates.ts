@@ -141,17 +141,70 @@ const brandCollaborationSections: AgreementSection[] = [
   },
 ];
 
+// Note: Creator Management and Brand Collaboration now have dedicated
+// structured flows (src/lib/agreement-details.ts + the /admin/agreements/
+// new/{creator-management,brand-collaboration} forms) rather than these
+// free-text templates. The two sections above are kept only so pre-
+// existing agreements created from them still render correctly — new
+// agreements of those types no longer use this template path.
+const ndaSections: AgreementSection[] = [
+  {
+    id: "parties",
+    heading: "1. Parties",
+    body:
+      "This Non-Disclosure Agreement (\"Agreement\") is entered into on {{agreement_date}} between {{company_name}}, having its registered address at {{company_address}} (\"VIDLIX\"), and {{creator_name}} (\"Recipient\").",
+  },
+  {
+    id: "confidential-info",
+    heading: "2. Confidential Information",
+    body:
+      "The parties may disclose commercial terms, campaign details, creator performance data, and other non-public information (\"Confidential Information\") to one another in connection with their business relationship.",
+  },
+  {
+    id: "obligations",
+    heading: "3. Obligations",
+    body:
+      "The Recipient agrees not to disclose Confidential Information to any third party and to use it solely for the purpose of the parties' business relationship, except where disclosure is required by law.",
+  },
+  {
+    id: "term",
+    heading: "4. Term",
+    body: "This Agreement is effective from {{start_date}} through {{end_date}}.",
+  },
+  {
+    id: "signatures",
+    heading: "5. Signatures",
+    body: "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.",
+  },
+];
+
 export const DEFAULT_TEMPLATES = [
   {
     name: "Creator Management Agreement",
     type: "CREATOR_MANAGEMENT" as const,
-    description: "Standard exclusive management agreement between VIDLIX and a managed creator.",
+    description: "Legacy free-text version — new agreements use the structured Creator Management flow instead.",
     content: stringifySections(creatorManagementSections),
   },
   {
     name: "Brand Collaboration Agreement",
     type: "BRAND_COLLABORATION" as const,
-    description: "Per-campaign agreement between a brand and a VIDLIX-managed creator.",
+    description: "Legacy free-text version — new agreements use the structured Brand Collaboration flow instead.",
     content: stringifySections(brandCollaborationSections),
+  },
+  {
+    name: "Non-Disclosure Agreement",
+    type: "NDA" as const,
+    description: "Standard mutual confidentiality agreement.",
+    content: stringifySections(ndaSections),
+  },
+  {
+    name: "Custom Agreement",
+    type: "CUSTOM" as const,
+    description: "Blank starting point for one-off documents.",
+    content: stringifySections([
+      { id: "intro", heading: "1. Introduction", body: "This Agreement is entered into on {{agreement_date}} between {{company_name}} and {{creator_name}}." },
+      { id: "terms", heading: "2. Terms", body: "Describe the terms of this agreement here." },
+      { id: "signatures", heading: "3. Signatures", body: "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above." },
+    ]),
   },
 ];

@@ -6,21 +6,21 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Company settings (singleton)
+  const companyData = {
+    companyName: "VIDLIX",
+    legalName: "Vidlix Media Private Limited",
+    tagline: "CREATORS • BRANDS • BEYOND",
+    email: "hello@vidlix.in",
+    phone: "+91 74887 16130",
+    website: "https://vidlix.in",
+    address: "Cyber Hub, DLF Phase 2, Gurugram, Haryana, India",
+    gstin: "07ABCDE1234F1Z5",
+    defaultCommissionPct: 30,
+  };
   await prisma.companySettings.upsert({
     where: { id: "company" },
-    update: {},
-    create: {
-      id: "company",
-      companyName: "VIDLIX",
-      legalName: "Vidlix Media Private Limited",
-      tagline: "CREATORS • BRANDS • BEYOND",
-      email: "hello@vidlix.in",
-      phone: "+91 90000 00000",
-      website: "https://vidlix.in",
-      address: "Cyber Hub, DLF Phase 2, Gurugram, Haryana, India",
-      gstin: "07ABCDE1234F1Z5",
-      defaultCommissionPct: 30,
-    },
+    update: companyData,
+    create: { id: "company", ...companyData },
   });
 
   // Super admin

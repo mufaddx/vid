@@ -48,7 +48,7 @@ async function main() {
   log("3. social connected, CONNECTED badges:", connectedCount);
 
   // 4. Create agreement for this creator
-  await page.goto(`${BASE}/admin/agreements/new?creatorId=${creatorId}`);
+  await page.goto(`${BASE}/admin/agreements/new/custom?creatorId=${creatorId}`);
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/admin\/agreements\/(?!new)[a-z0-9]+$/i, { timeout: 15000 });
   const agreementId = page.url().split("/").pop();

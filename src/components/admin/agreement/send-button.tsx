@@ -5,9 +5,21 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { sendForSignatureAction } from "@/server/actions/agreements";
+import { sendStructuredAgreementForSignatureAction } from "@/server/actions/structured-agreements";
 import { Send } from "lucide-react";
 
-export function SendForSignatureButton({ agreementId, disabled }: { agreementId: string; disabled?: boolean }) {
+export function SendForSignatureButton({
+  agreementId,
+  disabled,
+  structured,
+  label = "Send for Signature",
+}: {
+  agreementId: string;
+  disabled?: boolean;
+  /** Use the structured send flow (also issues a brand signing link for Brand Collaboration agreements). */
+  structured?: boolean;
+  label?: string;
+}) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -17,8 +29,9 @@ export function SendForSignatureButton({ agreementId, disabled }: { agreementId:
       onClick={() =>
         startTransition(async () => {
           try {
-            await sendForSignatureAction(agreementId);
-            toast.success("Agreement sent to creator for signature.");
+            if (structured) await sendStructuredAgreementForSignatureAction(agreementId);
+            else await sendForSignatureAction(agreementId);
+            toast.success("Agreement sent for signature.");
             router.refresh();
           } catch (err) {
             toast.error(err instanceof Error ? err.message : "Failed to send agreement.");
@@ -26,7 +39,7 @@ export function SendForSignatureButton({ agreementId, disabled }: { agreementId:
         })
       }
     >
-      <Send className="size-4" /> {pending ? "Sending…" : "Send for Signature"}
+      <Send className="size-4" /> {pending ? "Sending…" : label}
     </Button>
   );
 }

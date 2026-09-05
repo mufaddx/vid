@@ -1,114 +1,60 @@
-import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 import { PageHeader } from "@/components/admin/page-header";
-import { createAgreementAction } from "@/server/actions/agreements";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Users, Building2, FileText, ArrowRight } from "lucide-react";
 
-export default async function NewAgreementPage({
+export default async function NewAgreementTypePage({
   searchParams,
 }: {
-  searchParams: Promise<{ creatorId?: string; brandId?: string }>;
+  searchParams: Promise<{ creatorId?: string; brandId?: string; campaignId?: string }>;
 }) {
-  const { creatorId, brandId } = await searchParams;
+  const params = await searchParams;
+  const qs = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v) as [string, string][],
+  ).toString();
+  const withQs = (path: string) => (qs ? `${path}?${qs}` : path);
 
-  const [templates, creators, brands, campaigns] = await Promise.all([
-    prisma.agreementTemplate.findMany({ where: { status: "ACTIVE" } }),
-    prisma.creator.findMany({ orderBy: { name: "asc" } }),
-    prisma.brand.findMany({ orderBy: { name: "asc" } }),
-    prisma.campaign.findMany({ orderBy: { name: "asc" } }),
-  ]);
-
-  const selectedCreator = creators.find((c) => c.id === creatorId);
-  const today = new Date().toISOString().slice(0, 10);
-  const nextYear = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const options = [
+    {
+      href: withQs("/admin/agreements/new/creator-management"),
+      icon: Users,
+      title: "Creator / Influencer Management Agreement",
+      description: "VIDLIX ↔ Creator. Commission, monthly management fee, additional services.",
+    },
+    {
+      href: withQs("/admin/agreements/new/brand-collaboration"),
+      icon: Building2,
+      title: "Brand Collaboration Agreement",
+      description: "Brand × VIDLIX × Creator. Campaign deliverables, advertising usage, pricing.",
+    },
+    {
+      href: withQs("/admin/agreements/new/custom"),
+      icon: FileText,
+      title: "Custom / Other",
+      description: "NDA, campaign letters and other template-based documents.",
+    },
+  ];
 
   return (
     <div>
-      <PageHeader title="New Agreement" description="Generate an agreement from a template with live variables" />
-      <form action={createAgreementAction} className="p-8 max-w-2xl space-y-5">
-        <div className="space-y-1.5">
-          <Label>Template *</Label>
-          <Select name="templateId" required defaultValue={templates[0]?.id}>
-            <SelectTrigger className="w-full"><SelectValue placeholder="Select a template" /></SelectTrigger>
-            <SelectContent>
-              {templates.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label>Creator *</Label>
-          <Select name="creatorId" required defaultValue={selectedCreator?.id}>
-            <SelectTrigger className="w-full"><SelectValue placeholder="Select a creator" /></SelectTrigger>
-            <SelectContent>
-              {creators.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label>Brand (for brand collaboration agreements)</Label>
-            <Select name="brandId" defaultValue={brandId}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="None" /></SelectTrigger>
-              <SelectContent>
-                {brands.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Campaign</Label>
-            <Select name="campaignId">
-              <SelectTrigger className="w-full"><SelectValue placeholder="None" /></SelectTrigger>
-              <SelectContent>
-                {campaigns.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="startDate">Start Date *</Label>
-            <Input id="startDate" name="startDate" type="date" defaultValue={today} required />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="endDate">End Date *</Label>
-            <Input id="endDate" name="endDate" type="date" defaultValue={nextYear} required />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="commissionPercentage">Commission (%) *</Label>
-            <Input
-              id="commissionPercentage"
-              name="commissionPercentage"
-              type="number"
-              step="0.1"
-              min={0}
-              max={100}
-              defaultValue={selectedCreator ? String(selectedCreator.commissionPercentage) : "30"}
-              required
-            />
-          </div>
-        </div>
-
-        <Button type="submit">Generate Agreement</Button>
-      </form>
+      <PageHeader title="New Agreement" description="Choose the agreement type to continue" />
+      <div className="p-8 max-w-3xl grid gap-4">
+        {options.map((opt) => (
+          <Link
+            key={opt.href}
+            href={opt.href}
+            className="group flex items-center gap-4 rounded-xl border border-neutral-200 bg-white p-5 hover:border-violet-300 hover:shadow-sm transition-all"
+          >
+            <div className="size-11 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
+              <opt.icon className="size-5" />
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold text-neutral-900">{opt.title}</div>
+              <div className="text-sm text-neutral-500 mt-0.5">{opt.description}</div>
+            </div>
+            <ArrowRight className="size-4 text-neutral-300 group-hover:text-violet-500 transition-colors" />
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

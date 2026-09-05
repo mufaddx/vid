@@ -6,7 +6,7 @@ function wrapper(bodyHtml: string): string {
   <div style="font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif; background:#f5f3ff; padding:32px 0;">
     <div style="max-width:520px; margin:0 auto; background:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #ececec;">
       <div style="background:#111827; padding:24px 32px;">
-        <span style="color:#ffffff; font-size:20px; font-weight:700; letter-spacing:0.08em;">VIDLIX</span>
+        <span style="color:#ffffff; font-size:20px; font-weight:700; letter-spacing:0.08em;">VIDLI<span style="color:#a78bfa;">X</span></span>
         <div style="color:#a78bfa; font-size:11px; letter-spacing:0.15em; margin-top:2px;">CREATORS • BRANDS • BEYOND</div>
       </div>
       <div style="padding:32px; color:#111827; font-size:14px; line-height:1.6;">
