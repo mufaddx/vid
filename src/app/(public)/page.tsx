@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CreatorOrbit } from "@/components/public/creator-orbit";
 import { CreatorCard } from "@/components/public/creator-card";
 import { HeroParticles } from "@/components/public/hero-particles";
+import { Marquee } from "@/components/public/marquee";
 import { computeTotalAudience } from "@/lib/audience";
 import { formatCompactNumber } from "@/lib/format";
 import { ArrowRight, Handshake, ShieldCheck, TrendingUp, Users2 } from "lucide-react";
@@ -95,14 +96,17 @@ export default async function HomePage() {
       ) : null}
 
       {/* Trust */}
-      <section className="border-y border-white/10 bg-white/[0.02] py-7">
-        <div className="max-w-7xl mx-auto px-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-neutral-500 text-xs sm:text-sm tracking-widest">
-          <span>TRUSTED BY AMBITIOUS BRANDS</span>
-          <span className="text-neutral-700">•</span>
-          <span>{formatCompactNumber(networkAudience)}+ COMBINED AUDIENCE</span>
-          <span className="text-neutral-700">•</span>
-          <span>{creators.length}+ MANAGED CREATORS</span>
-        </div>
+      <section className="border-y border-white/10 bg-white/[0.02] py-6">
+        <Marquee
+          items={[
+            "TRUSTED BY AMBITIOUS BRANDS",
+            `${formatCompactNumber(networkAudience)}+ COMBINED AUDIENCE`,
+            `${creators.length}+ MANAGED CREATORS`,
+            "VERIFIED AUDIENCE DATA",
+            "MANAGED, NOT DIY",
+            "BRAND-GRADE AGREEMENTS",
+          ]}
+        />
       </section>
 
       {/* Featured Creators */}

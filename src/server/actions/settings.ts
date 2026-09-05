@@ -25,6 +25,10 @@ const settingsSchema = z.object({
   agreementPrefix: z.string().min(1),
   bankDetails: z.string().optional(),
   upiDetails: z.string().optional(),
+  instagramUrl: z.string().optional(),
+  youtubeUrl: z.string().optional(),
+  facebookUrl: z.string().optional(),
+  xUrl: z.string().optional(),
 });
 
 export type SettingsFormState = { error?: string; success?: boolean } | undefined;
@@ -49,5 +53,6 @@ export async function updateCompanySettingsAction(
   await logActivity({ actorId: session.id, action: "Company settings updated", entityType: "CompanySettings", entityId: "company" });
 
   revalidatePath("/admin/settings");
+  revalidatePath("/", "layout");
   return { success: true };
 }

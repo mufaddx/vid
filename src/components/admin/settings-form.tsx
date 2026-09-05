@@ -59,6 +59,19 @@ export function SettingsForm({ company }: { company: SerializedCompanySettings }
         </div>
       </section>
 
+      <section className="space-y-4">
+        <h3 className="text-sm font-semibold text-neutral-700">Social Media</h3>
+        <p className="text-xs text-neutral-400 -mt-2">
+          Shown as icons in the website footer. Leave blank to hide a platform — never invented.
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Instagram URL" name="instagramUrl" defaultValue={company.instagramUrl ?? ""} />
+          <Field label="YouTube URL" name="youtubeUrl" defaultValue={company.youtubeUrl ?? ""} />
+          <Field label="Facebook URL" name="facebookUrl" defaultValue={company.facebookUrl ?? ""} />
+          <Field label="X (Twitter) URL" name="xUrl" defaultValue={company.xUrl ?? ""} />
+        </div>
+      </section>
+
       {state?.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
       {state?.success ? <p className="text-sm text-emerald-600">Settings saved.</p> : null}
 

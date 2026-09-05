@@ -13,6 +13,7 @@ const NAV = [
   { href: "/creators", label: "Creators" },
   { href: "/for-brands", label: "For Brands" },
   { href: "/for-creators", label: "For Creators" },
+  { href: "/blog", label: "Blog" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
@@ -22,7 +23,7 @@ export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur border-b border-white/10">
+    <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur border-b border-white/10 pt-[env(safe-area-inset-top)]">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="text-lg font-bold tracking-widest text-white">
           <VidlixWordmark xClassName="text-violet-400" />

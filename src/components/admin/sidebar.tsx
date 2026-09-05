@@ -17,6 +17,8 @@ import {
   BarChart3,
   Bell,
   Settings,
+  Newspaper,
+  Scale,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logoutAction } from "@/server/actions/auth";
@@ -35,6 +37,8 @@ const NAV = [
   { href: "/admin/email-accounts", label: "Email Accounts", icon: MailPlus },
   { href: "/admin/inquiries", label: "Inquiries", icon: Contact },
   { href: "/admin/documents", label: "Documents", icon: FolderOpen },
+  { href: "/admin/blog", label: "Blog", icon: Newspaper },
+  { href: "/admin/legal", label: "Legal Pages", icon: Scale },
   { href: "/admin/reports", label: "Reports", icon: BarChart3 },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/settings", label: "Settings", icon: Settings },

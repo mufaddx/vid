@@ -128,10 +128,27 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
   body {
     @apply bg-background text-foreground;
+    /* Safety net (not a fix for the underlying layout): nothing should
+       legitimately need horizontal scroll on this site. `clip` guarantees
+       an oversized decorative element can never surface as a scrollable
+       strip revealing the page's default background, while still letting
+       real accessibility zoom work normally. */
+    overflow-x: clip;
+    max-width: 100%;
   }
   html {
     @apply font-sans;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
   }
 }

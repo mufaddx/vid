@@ -2,6 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { CreatorCard } from "@/components/public/creator-card";
 import { computeTotalAudience } from "@/lib/audience";
 import { Input } from "@/components/ui/input";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Creators | VIDLIX",
+  description: "Browse VIDLIX-managed creators with verified, real-time synced audience data.",
+};
 
 export default async function CreatorsDirectoryPage({
   searchParams,

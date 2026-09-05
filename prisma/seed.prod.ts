@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { DEFAULT_TEMPLATES } from "../src/lib/default-templates";
+import { seedSiteContent } from "./content-seed";
 
 // Production bootstrap seed — creates ONLY the essentials every fresh
 // deployment needs (company settings, the super admin login, and the
@@ -54,6 +55,8 @@ async function main() {
       await prisma.agreementTemplate.create({ data: { ...t, status: "ACTIVE" } });
     }
   }
+
+  await seedSiteContent(prisma);
 
   console.log("Production seed complete.");
   console.log("Admin login: admin@vidlix.in / vidlix@admin123");

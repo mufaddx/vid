@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ShieldCheck } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "For Brands | VIDLIX",
+  description: "Run creator campaigns end-to-end with a single point of contact and verified audience data.",
+};
 
 export default function ForBrandsPage() {
   return (

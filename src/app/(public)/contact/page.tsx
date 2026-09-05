@@ -1,5 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { Mail, Phone, MapPin } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contact | VIDLIX",
+  description: "Get in touch with VIDLIX for brand collaborations, creator applications, or general inquiries.",
+};
 
 export default async function ContactPage() {
   const company = await prisma.companySettings.findUnique({ where: { id: "company" } });

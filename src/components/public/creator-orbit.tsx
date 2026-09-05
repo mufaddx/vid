@@ -18,7 +18,7 @@ export function CreatorOrbit({ creators }: { creators: OrbitCreator[] }) {
   const radius = 42; // percent of container
 
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[420px]">
+    <div className="relative mx-auto aspect-square w-full max-w-[420px] overflow-hidden rounded-full">
       <div className="absolute inset-0 rounded-full border border-white/10" />
       <div className="absolute inset-[15%] rounded-full border border-white/5" />
 

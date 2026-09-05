@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { DEFAULT_TEMPLATES } from "../src/lib/default-templates";
+import { seedSiteContent } from "./content-seed";
 
 const prisma = new PrismaClient();
 
@@ -207,6 +208,8 @@ async function main() {
       ],
     });
   }
+
+  await seedSiteContent(prisma);
 
   console.log("Seed complete.");
   console.log("Admin login: admin@vidlix.in / vidlix@admin123");

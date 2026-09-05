@@ -78,9 +78,87 @@ model CompanySettings {
   defaultDueDays         Int      @default(30)
   bankDetails            String?  @db.Text
   upiDetails             String?  @db.Text
+  // Public-site brand social links — distinct from Creator/SocialAccount,
+  // which tracks each managed creator's own accounts. Optional: shown in
+  // the site footer only when set (never invent a URL that isn't real).
+  instagramUrl           String?
+  youtubeUrl             String?
+  facebookUrl            String?
+  xUrl                   String?
   updatedAt              DateTime @updatedAt
 
   @@map("company_settings")
+}
+
+// ---------------------------------------------------------------------------
+// Public site content: blog, legal pages, footer links
+// ---------------------------------------------------------------------------
+
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model BlogCategory {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  posts     BlogPost[]
+  createdAt DateTime   @default(now())
+
+  @@map("blog_categories")
+}
+
+model BlogPost {
+  id             String         @id @default(cuid())
+  slug           String         @unique
+  title          String
+  excerpt        String         @db.Text
+  content        String         @db.LongText // sanitized HTML
+  coverImageUrl  String?
+  categoryId     String?
+  category       BlogCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags           Json           @default("[]") // string[]
+  authorName     String         @default("VIDLIX Team")
+  status         BlogPostStatus @default(DRAFT)
+  featured       Boolean        @default(false)
+  seoTitle       String?
+  seoDescription String?        @db.Text
+  readingMinutes Int            @default(4)
+  publishedAt    DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@map("blog_posts")
+}
+
+// A fixed, known set of legal documents (see prisma/seed.ts for the slugs
+// created) — admins edit content, they don't add arbitrary new legal pages.
+model LegalPage {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   String   @db.LongText // sanitized HTML
+  updatedAt DateTime @updatedAt
+
+  @@map("legal_pages")
+}
+
+enum FooterLinkGroup {
+  COMPANY
+  PLATFORM
+  GET_STARTED
+}
+
+model FooterLink {
+  id        String          @id @default(cuid())
+  group     FooterLinkGroup
+  label     String
+  href      String
+  order     Int             @default(0)
+  createdAt DateTime        @default(now())
+
+  @@map("footer_links")
 }
 
 // Numbered sequences per document type per year, e.g. AGR-2026-00001

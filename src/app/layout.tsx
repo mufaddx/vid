@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -16,6 +16,15 @@ export const metadata: Metadata = {
   title: "VIDLIX — The People Behind Influence",
   description:
     "VIDLIX manages exceptional creators, connects them with ambitious brands, and handles everything from collaboration to contracts and payments.",
+};
+
+// Explicit, correct mobile viewport — width tied to the device, no forced
+// initial zoom, and user-scaling left enabled (accessibility zoom must
+// keep working; only unintended layout overflow is being fixed here).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

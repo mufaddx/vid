@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "For Creators | VIDLIX",
+  description: "Let VIDLIX manage your brand relationships, contracts, invoicing and payouts, so you can focus on content.",
+};
 
 export default function ForCreatorsPage() {
   return (
