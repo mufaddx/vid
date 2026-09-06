@@ -30,6 +30,11 @@ model AdminUser {
   email        String    @unique
   passwordHash String
   role         AdminRole @default(SUPER_ADMIN)
+  // Employee profile fields — VIDLIX has no separate "Employee" model;
+  // a staff member IS an AdminUser with a non-SUPER_ADMIN role, scoped by
+  // src/lib/permissions.ts. Optional so existing rows need no backfill.
+  phone        String?
+  designation  String?
   active       Boolean   @default(true)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
@@ -749,8 +754,10 @@ enum EmailAccountStatus {
 
 model CreatorEmailAccount {
   id            String              @id @default(cuid())
-  creatorId     String
-  creator       Creator             @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  // Optional: a mailbox no longer requires a Creator to exist first — it
+  // can be a standalone company mailbox, assigned to a Creator later.
+  creatorId     String?
+  creator       Creator?            @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   emailAddress  String              @unique
   localPart     String
   domain        String              @default("vidlix.in")

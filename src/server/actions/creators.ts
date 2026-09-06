@@ -26,7 +26,7 @@ const creatorSchema = z.object({
   featured: z.coerce.boolean().default(false),
 });
 
-export type CreatorFormState = { error?: string } | undefined;
+export type CreatorFormState = { error?: string; ok?: true; id?: string } | undefined;
 
 export async function createCreatorAction(
   _prev: CreatorFormState,
@@ -77,7 +77,7 @@ export async function createCreatorAction(
   });
 
   revalidatePath("/admin/creators");
-  redirect(`/admin/creators/${creator.id}`);
+  return { ok: true, id: creator.id };
 }
 
 export async function updateCreatorAction(

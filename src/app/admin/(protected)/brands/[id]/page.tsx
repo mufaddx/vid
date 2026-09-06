@@ -4,9 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
-import { Button } from "@/components/ui/button";
 import { formatDate, formatINR } from "@/lib/format";
 import { Megaphone } from "lucide-react";
+import { AddCampaignDialog } from "@/components/admin/campaigns/add-campaign-dialog";
 
 export default async function BrandDetailPage({
   params,
@@ -32,11 +32,7 @@ export default async function BrandDetailPage({
       <PageHeader
         title={brand.name}
         description={brand.industry ?? "Brand"}
-        actions={
-          <Button asChild>
-            <Link href={`/admin/campaigns/new?brandId=${brand.id}`}>New Campaign</Link>
-          </Button>
-        }
+        actions={<AddCampaignDialog brands={[{ id: brand.id, name: brand.name }]} defaultBrandId={brand.id} />}
       />
       <div className="p-8 space-y-8">
         <div className="grid grid-cols-3 gap-4">

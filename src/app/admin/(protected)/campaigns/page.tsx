@@ -6,28 +6,28 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate, formatINR } from "@/lib/format";
-import { Megaphone, Plus } from "lucide-react";
+import { Megaphone } from "lucide-react";
+import { AddCampaignDialog } from "@/components/admin/campaigns/add-campaign-dialog";
 
 export default async function CampaignsPage() {
-  const campaigns = await prisma.campaign.findMany({
-    include: { brand: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [campaigns, brands] = await Promise.all([
+    prisma.campaign.findMany({
+      include: { brand: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
 
   return (
     <div>
       <PageHeader
         title="Campaigns"
         description={`${campaigns.length} campaign${campaigns.length === 1 ? "" : "s"}`}
-        actions={
-          <Button asChild>
-            <Link href="/admin/campaigns/new"><Plus className="size-4" /> New Campaign</Link>
-          </Button>
-        }
+        actions={<AddCampaignDialog brands={brands} />}
       />
       <div className="p-8">
         {campaigns.length === 0 ? (
-          <EmptyState icon={Megaphone} title="No campaigns yet" />
+          <EmptyState icon={Megaphone} title="No campaigns yet" action={<AddCampaignDialog brands={brands} />} />
         ) : (
           <div className="rounded-xl border border-neutral-200 bg-white overflow-x-auto">
             <Table>

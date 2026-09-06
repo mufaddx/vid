@@ -5,7 +5,8 @@ import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Building2, Plus } from "lucide-react";
+import { Building2 } from "lucide-react";
+import { AddBrandDialog } from "@/components/admin/brands/add-brand-dialog";
 
 export default async function BrandsPage() {
   const brands = await prisma.brand.findMany({
@@ -18,15 +19,11 @@ export default async function BrandsPage() {
       <PageHeader
         title="Brands"
         description={`${brands.length} brand${brands.length === 1 ? "" : "s"}`}
-        actions={
-          <Button asChild>
-            <Link href="/admin/brands/new"><Plus className="size-4" /> Add Brand</Link>
-          </Button>
-        }
+        actions={<AddBrandDialog />}
       />
       <div className="p-8">
         {brands.length === 0 ? (
-          <EmptyState icon={Building2} title="No brands yet" action={<Button asChild size="sm"><Link href="/admin/brands/new">Add Brand</Link></Button>} />
+          <EmptyState icon={Building2} title="No brands yet" action={<AddBrandDialog triggerSize="sm" />} />
         ) : (
           <div className="rounded-xl border border-neutral-200 bg-white overflow-x-auto">
             <Table>

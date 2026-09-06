@@ -29,7 +29,7 @@ export default async function InboxPage() {
         description="Unified inbox across every creator mailbox"
         actions={
           <ComposeDialog
-            mailboxes={mailboxes.map((m) => ({ id: m.id, emailAddress: m.emailAddress, creatorName: m.creator.name }))}
+            mailboxes={mailboxes.map((m) => ({ id: m.id, emailAddress: m.emailAddress, creatorName: m.creator?.name ?? "Standalone" }))}
           />
         }
       />
@@ -43,7 +43,7 @@ export default async function InboxPage() {
                 <div>
                   <div className="text-sm font-medium text-neutral-900">{t.subject}</div>
                   <div className="text-xs text-neutral-400 mt-0.5">
-                    {t.creatorEmailAccount.creator.name} · {t.creatorEmailAccount.emailAddress}
+                    {t.creatorEmailAccount.creator?.name ?? "Standalone mailbox"} · {t.creatorEmailAccount.emailAddress}
                   </div>
                   {t.messages[0] ? (
                     <div className="text-xs text-neutral-500 mt-1 truncate max-w-md">{t.messages[0].textBody}</div>

@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { computeTotalAudience } from "@/lib/audience";
 import { formatCompactNumber } from "@/lib/format";
-import { Plus, Users } from "lucide-react";
+import { Users } from "lucide-react";
+import { AddCreatorDialog } from "@/components/admin/creators/add-creator-dialog";
 
 export default async function AdminCreatorsPage() {
   const creators = await prisma.creator.findMany({
@@ -21,13 +22,7 @@ export default async function AdminCreatorsPage() {
       <PageHeader
         title="Creators"
         description={`${creators.length} managed creator${creators.length === 1 ? "" : "s"}`}
-        actions={
-          <Button asChild>
-            <Link href="/admin/creators/new">
-              <Plus className="size-4" /> Add Creator
-            </Link>
-          </Button>
-        }
+        actions={<AddCreatorDialog />}
       />
       <div className="p-8">
         {creators.length === 0 ? (
@@ -35,11 +30,7 @@ export default async function AdminCreatorsPage() {
             icon={Users}
             title="No creators yet"
             description="Onboard your first managed creator to get started."
-            action={
-              <Button asChild size="sm">
-                <Link href="/admin/creators/new">Add Creator</Link>
-              </Button>
-            }
+            action={<AddCreatorDialog triggerSize="sm" />}
           />
         ) : (
           <div className="rounded-xl border border-neutral-200 bg-white overflow-x-auto">

@@ -39,18 +39,17 @@ async function main() {
     log(path, "->", resp.status());
   }
 
-  // Brand creation
-  await page.goto(`${BASE}/admin/brands/new`);
-  await page.fill("#name", "Test Brand Co");
+  // Brand creation — via the "Add Brand" popup on the list page
+  await page.goto(`${BASE}/admin/brands`);
+  const brandName = `Test Brand Co ${Date.now().toString().slice(-5)}`;
+  await page.click('button:has-text("Add Brand")');
+  await page.fill("#name", brandName);
   await page.fill("#industry", "FMCG");
-  await page.click('button[type="submit"]');
-  try {
-    await page.waitForURL(/\/admin\/brands\/(?!new)[a-z0-9]+$/i, { timeout: 8000 });
-    log("brand created ->", page.url());
-  } catch {
-    log("brand creation did not redirect, current url:", page.url());
-    await page.screenshot({ path: "/tmp/brand-fail.png", fullPage: true });
-  }
+  await page.locator('form button[type="submit"]:has-text("Add Brand")').click();
+  await page.waitForTimeout(1000);
+  const brandRowVisible = (await page.locator(`text=${brandName}`).count()) > 0;
+  log("brand created via modal, row visible:", brandRowVisible, "| stayed on list:", page.url() === `${BASE}/admin/brands`);
+  if (!brandRowVisible) await page.screenshot({ path: "/tmp/brand-fail.png", fullPage: true });
 
   // Inbox thread
   await page.goto(`${BASE}/admin/inbox`);

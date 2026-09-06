@@ -2,13 +2,14 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { slugify } from "@/lib/format";
 import { logActivity } from "@/lib/activity";
 
 const brandSchema = z.object({
-  name: z.string().min(2),
+  name: z.string().min(2, "Brand name is required."),
   contactPerson: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
@@ -17,11 +18,21 @@ const brandSchema = z.object({
   notes: z.string().optional(),
 });
 
-export async function createBrandAction(formData: FormData): Promise<void> {
+export type BrandFormState = { error?: string; ok?: true; id?: string } | undefined;
+
+export async function createBrandAction(
+  _prev: BrandFormState,
+  formData: FormData,
+): Promise<BrandFormState> {
   const session = await getSession();
   if (!session) redirect("/admin/login");
 
-  const data = brandSchema.parse(Object.fromEntries(formData.entries()));
+  const parsed = brandSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+  const data = parsed.data;
+
   let slug = slugify(data.name);
   if (await prisma.brand.findUnique({ where: { slug } })) {
     slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
@@ -42,12 +53,13 @@ export async function createBrandAction(formData: FormData): Promise<void> {
 
   await logActivity({ actorId: session.id, action: `Brand ${brand.name} added`, entityType: "Brand", entityId: brand.id });
 
-  redirect(`/admin/brands/${brand.id}`);
+  revalidatePath("/admin/brands");
+  return { ok: true, id: brand.id };
 }
 
 const campaignSchema = z.object({
-  name: z.string().min(2),
-  brandId: z.string().min(1),
+  name: z.string().min(2, "Campaign name is required."),
+  brandId: z.string().min(1, "Please select a brand."),
   description: z.string().optional(),
   budget: z.coerce.number().nonnegative().optional(),
   startDate: z.string().optional(),
@@ -68,11 +80,20 @@ const campaignSchema = z.object({
     .default("DRAFT"),
 });
 
-export async function createCampaignAction(formData: FormData): Promise<void> {
+export type CampaignFormState = { error?: string; ok?: true; id?: string } | undefined;
+
+export async function createCampaignAction(
+  _prev: CampaignFormState,
+  formData: FormData,
+): Promise<CampaignFormState> {
   const session = await getSession();
   if (!session) redirect("/admin/login");
 
-  const data = campaignSchema.parse(Object.fromEntries(formData.entries()));
+  const parsed = campaignSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+  const data = parsed.data;
 
   const campaign = await prisma.campaign.create({
     data: {
@@ -88,5 +109,7 @@ export async function createCampaignAction(formData: FormData): Promise<void> {
 
   await logActivity({ actorId: session.id, action: `Campaign ${campaign.name} created`, entityType: "Campaign", entityId: campaign.id });
 
-  redirect(`/admin/campaigns`);
+  revalidatePath("/admin/campaigns");
+  revalidatePath(`/admin/brands/${data.brandId}`);
+  return { ok: true, id: campaign.id };
 }

@@ -21,15 +21,19 @@ async function main() {
   await adminLogin(page, { base: BASE });
   log("1. login OK");
 
-  // 2. Create a new creator
+  // 2. Create a new creator — via the "Add Creator" popup on the list page
   const uniqueSuffix = Date.now().toString().slice(-5);
-  await page.goto(`${BASE}/admin/creators/new`);
-  await page.fill("#name", `Test Creator ${uniqueSuffix}`);
+  const creatorName = `Test Creator ${uniqueSuffix}`;
+  await page.goto(`${BASE}/admin/creators`);
+  await page.click('button:has-text("Add Creator")');
+  await page.fill("#name", creatorName);
   await page.fill("#category", "Beauty & Wellness");
   await page.fill("#email", `test.creator.${uniqueSuffix}@example.com`);
   await page.fill("#city", "Mumbai");
   await page.fill("#managementFee", "40000");
-  await page.click('button[type="submit"]');
+  await page.locator('form button[type="submit"]:has-text("Create Creator")').click();
+  await page.waitForTimeout(1000);
+  await page.locator(`tr:has-text("${creatorName}") a:has-text("View")`).click();
   await page.waitForURL(/\/admin\/creators\/(?!new)[a-z0-9]+$/i, { timeout: 15000 });
   const creatorId = page.url().split("/").pop();
   log("2. creator created ->", creatorId);

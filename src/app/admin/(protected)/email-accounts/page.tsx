@@ -32,9 +32,13 @@ export default async function EmailAccountsPage() {
                   <Mail className="size-4 text-violet-600" />
                   <div>
                     <div className="font-medium">{a.emailAddress}</div>
-                    <Link href={`/admin/creators/${a.creatorId}`} className="text-xs text-neutral-400 hover:text-violet-600">
-                      {a.creator.name}
-                    </Link>
+                    {a.creator ? (
+                      <Link href={`/admin/creators/${a.creatorId}`} className="text-xs text-neutral-400 hover:text-violet-600">
+                        {a.creator.name}
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-neutral-400">Standalone mailbox — no creator assigned</span>
+                    )}
                   </div>
                 </div>
                 <StatusBadge status={a.status} />
