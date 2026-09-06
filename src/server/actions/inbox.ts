@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
-import { sendEmail } from "@/lib/email/send";
+import { sendEmail, buildFromHeader } from "@/lib/email/send";
 import { readAttachmentsFromFormData } from "@/lib/email/attachments";
 
 export async function sendInboxReplyAction(threadId: string, formData: FormData): Promise<void> {
@@ -18,7 +18,10 @@ export async function sendInboxReplyAction(threadId: string, formData: FormData)
 
   const thread = await prisma.emailThread.findUniqueOrThrow({
     where: { id: threadId },
-    include: { creatorEmailAccount: true, messages: { orderBy: { createdAt: "desc" }, take: 1 } },
+    include: {
+      creatorEmailAccount: { include: { creator: { select: { name: true } } } },
+      messages: { orderBy: { createdAt: "desc" }, take: 1 },
+    },
   });
 
   const lastInbound = thread.messages.find((m) => m.direction === "INBOUND") ?? thread.messages[0];
@@ -27,8 +30,13 @@ export async function sendInboxReplyAction(threadId: string, formData: FormData)
   const htmlBody = body.replace(/\n/g, "<br/>");
   const attachments = await readAttachmentsFromFormData(formData, "attachments");
 
+  // A creator-owned mailbox shows the creator's real name as sender; a
+  // standalone mailbox falls back to its own configured display name.
+  const senderName = thread.creatorEmailAccount.creator?.name ?? thread.creatorEmailAccount.displayName;
+  const fromHeader = buildFromHeader(thread.creatorEmailAccount.emailAddress, senderName);
+
   await sendEmail({
-    from: thread.creatorEmailAccount.emailAddress,
+    from: fromHeader,
     to: toEmail,
     subject,
     html: htmlBody,
@@ -78,12 +86,15 @@ export async function sendComposeEmailAction(formData: FormData): Promise<void> 
 
   const account = await prisma.creatorEmailAccount.findUniqueOrThrow({
     where: { id: data.creatorEmailAccountId },
+    include: { creator: { select: { name: true } } },
   });
 
   const htmlBody = data.body.replace(/\n/g, "<br/>");
+  const senderName = account.creator?.name ?? account.displayName;
+  const fromHeader = buildFromHeader(account.emailAddress, senderName);
 
   await sendEmail({
-    from: account.emailAddress,
+    from: fromHeader,
     to: data.to,
     subject: data.subject,
     html: htmlBody,

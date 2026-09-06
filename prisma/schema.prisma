@@ -779,6 +779,11 @@ model CreatorEmailAccount {
   emailAddress  String              @unique
   localPart     String
   domain        String              @default("vidlix.in")
+  // Display name shown as the outgoing "From" name for mail sent from this
+  // mailbox when it has no Creator attached (a standalone mailbox, e.g. a
+  // department address). When a Creator IS attached, the Creator's own
+  // name is used instead and this field is ignored — see formatSenderFrom().
+  displayName   String?
   status        EmailAccountStatus  @default(ACTIVE)
   createdAt     DateTime            @default(now())
 

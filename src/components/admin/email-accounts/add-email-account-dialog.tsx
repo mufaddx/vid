@@ -63,6 +63,14 @@ export function AddEmailAccountDialog({ creators }: { creators: Creator[] }) {
             </div>
           </div>
           <div className="space-y-1.5">
+            <Label>Name</Label>
+            <Input name="displayName" placeholder="e.g. Rahul Sharma" />
+            <p className="text-xs text-neutral-400">
+              Shown as the sender name on mail sent from this address (used only when no creator is
+              assigned below — an assigned creator&rsquo;s own name is used instead).
+            </p>
+          </div>
+          <div className="space-y-1.5">
             <Label>Assign to Creator (optional)</Label>
             <input type="hidden" name="creatorId" value={creatorId === "none" ? "" : creatorId} />
             <Select value={creatorId} onValueChange={setCreatorId}>

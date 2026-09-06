@@ -32,6 +32,10 @@ async function main() {
   await page.fill("#city", "Mumbai");
   await page.fill("#managementFee", "40000");
   await page.locator('form button[type="submit"]:has-text("Create Creator")').click();
+  // Creation now leads into an optional "Add a Photo" step instead of
+  // closing immediately — skip it to get back to the plain list view.
+  await page.waitForSelector("text=Add a Photo", { timeout: 8000 });
+  await page.click('button:has-text("Skip for now")');
   await page.waitForTimeout(1000);
   await page.locator(`tr:has-text("${creatorName}") a:has-text("View")`).click();
   await page.waitForURL(/\/admin\/creators\/(?!new)[a-z0-9]+$/i, { timeout: 15000 });

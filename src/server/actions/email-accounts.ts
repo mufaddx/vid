@@ -117,9 +117,12 @@ export async function createStandaloneEmailAccountAction(
 
   const creatorId = String(formData.get("creatorId") || "");
   const creator = creatorId ? await prisma.creator.findUnique({ where: { id: creatorId } }) : null;
+  // Only meaningful for a standalone mailbox (no creator attached) — once a
+  // creator is assigned, their own name is used as the sender name instead.
+  const displayName = String(formData.get("displayName") || "").trim() || null;
 
   const account = await prisma.creatorEmailAccount.create({
-    data: { creatorId: creator ? creator.id : undefined, emailAddress, localPart, domain: DOMAIN },
+    data: { creatorId: creator ? creator.id : undefined, emailAddress, localPart, domain: DOMAIN, displayName },
   });
 
   await logActivity({

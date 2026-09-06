@@ -11,6 +11,7 @@ type Account = {
   id: string;
   emailAddress: string;
   status: string;
+  displayName: string | null;
   creator: { id: string; name: string } | null;
 };
 
@@ -24,7 +25,10 @@ export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
     const q = query.trim().toLowerCase();
     if (!q) return accounts;
     return accounts.filter(
-      (a) => a.emailAddress.toLowerCase().includes(q) || a.creator?.name.toLowerCase().includes(q),
+      (a) =>
+        a.emailAddress.toLowerCase().includes(q) ||
+        a.creator?.name.toLowerCase().includes(q) ||
+        a.displayName?.toLowerCase().includes(q),
     );
   }, [accounts, query]);
 
@@ -55,7 +59,9 @@ export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
                       {a.creator.name}
                     </Link>
                   ) : (
-                    <span className="text-xs text-neutral-400">Standalone mailbox — no creator assigned</span>
+                    <span className="text-xs text-neutral-400">
+                      {a.displayName ? `${a.displayName} · Standalone mailbox` : "Standalone mailbox — no creator assigned"}
+                    </span>
                   )}
                 </div>
               </div>

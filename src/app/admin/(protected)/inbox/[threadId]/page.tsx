@@ -23,12 +23,13 @@ export default async function ThreadPage({
   if (!thread) notFound();
 
   const reply = sendInboxReplyAction.bind(null, thread.id);
+  const senderName = thread.creatorEmailAccount.creator?.name ?? thread.creatorEmailAccount.displayName;
 
   return (
     <div>
       <PageHeader
         title={thread.subject}
-        description={`${thread.creatorEmailAccount.creator?.name ?? "Standalone mailbox"} · ${thread.creatorEmailAccount.emailAddress}`}
+        description={`${senderName ?? "Standalone mailbox"} · ${thread.creatorEmailAccount.emailAddress}${senderName ? "" : " (no sender name set)"}`}
       />
       <div className="p-8 max-w-3xl mx-auto space-y-4">
         {thread.messages.map((m) => (
@@ -48,7 +49,12 @@ export default async function ThreadPage({
         ))}
 
         <form action={reply} className="rounded-xl border border-neutral-200 bg-white p-4 space-y-3">
-          <Textarea name="body" rows={4} placeholder={`Reply from ${thread.creatorEmailAccount.emailAddress}…`} required />
+          <Textarea
+            name="body"
+            rows={4}
+            placeholder={`Reply as ${senderName ? `${senderName} <${thread.creatorEmailAccount.emailAddress}>` : thread.creatorEmailAccount.emailAddress}…`}
+            required
+          />
           <input
             type="file"
             name="attachments"

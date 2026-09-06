@@ -108,23 +108,26 @@ function drawToCanvas(img: HTMLImageElement, imgSize: Size, frame: Size, focal: 
   });
 }
 
-export function PhotoCropDialog({ creatorId }: { creatorId: string }) {
-  const [open, setOpen] = useState(false);
+/** The crop UI itself, with no opinion on how it's presented — used both
+ * standalone (PhotoCropDialog, for an existing creator) and as a step
+ * inside AddCreatorDialog's create flow (a brand-new creator, right after
+ * creation). `onDone` fires after a successful save; `onSkip` (if given)
+ * renders a "Skip for now" action next to the file picker. */
+export function PhotoCropEditor({
+  creatorId,
+  onDone,
+  onSkip,
+}: {
+  creatorId: string;
+  onDone: () => void;
+  onSkip?: () => void;
+}) {
   const [imgUrl, setImgUrl] = useState<string | null>(null);
   const [imgSize, setImgSize] = useState<Size | null>(null);
   const [focal, setFocal] = useState<Focal>({ x: 0.5, y: 0.5 });
   const [zoom, setZoom] = useState(1);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
-  const router = useRouter();
-
-  const reset = useCallback(() => {
-    setImgUrl(null);
-    setImgSize(null);
-    setFocal({ x: 0.5, y: 0.5 });
-    setZoom(1);
-    setError(undefined);
-  }, []);
 
   function handleFile(file: File) {
     const url = URL.createObjectURL(file);
@@ -162,9 +165,7 @@ export function PhotoCropDialog({ creatorId }: { creatorId: string }) {
         setError(res.error);
         return;
       }
-      setOpen(false);
-      reset();
-      router.refresh();
+      onDone();
     } catch {
       setError("Could not process that image. Try a different file.");
     } finally {
@@ -172,14 +173,96 @@ export function PhotoCropDialog({ creatorId }: { creatorId: string }) {
     }
   }
 
+  if (!imgUrl) {
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-neutral-500">
+          Choose a photo — drag to reposition and zoom to adjust before saving. It&rsquo;s used as the
+          creator&rsquo;s avatar and card image everywhere on the site.
+        </p>
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFile(file);
+          }}
+          className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded-md file:border-0 file:bg-violet-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-violet-700 hover:file:bg-violet-100"
+        />
+        {onSkip ? (
+          <div className="flex justify-end">
+            <Button type="button" variant="ghost" onClick={onSkip}>Skip for now</Button>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) reset();
-      }}
-    >
+    <div className="space-y-4">
+      <div className="flex items-start justify-center gap-6">
+        <CropFrame
+          frame={{ w: 220, h: 220 }}
+          shape="circle"
+          label="Avatar"
+          imgUrl={imgUrl}
+          imgSize={imgSize!}
+          focal={focal}
+          zoom={zoom}
+          interactive
+          onDrag={handleDrag}
+        />
+        <CropFrame
+          frame={{ w: 128, h: 160 }}
+          shape="square"
+          label="Card"
+          imgUrl={imgUrl}
+          imgSize={imgSize!}
+          focal={focal}
+          zoom={zoom}
+        />
+      </div>
+      <p className="text-xs text-neutral-400 text-center">Drag the avatar preview to reposition — the card preview updates with it.</p>
+
+      <div className="space-y-1.5">
+        <label className="text-xs text-neutral-500">Zoom</label>
+        <input
+          type="range"
+          min={1}
+          max={3}
+          step={0.05}
+          value={zoom}
+          onChange={(e) => setZoom(Number(e.target.value))}
+          className="w-full accent-violet-600"
+        />
+      </div>
+
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={() => setImgUrl(null)}>Choose Another</Button>
+        <Button type="button" onClick={handleSave} disabled={pending}>
+          {pending ? "Saving…" : "Save Photo"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** Standalone entry point — a small camera-icon button (meant to overlay a
+ * creator's existing avatar on the detail page) that opens the editor in
+ * its own dialog. */
+export function PhotoCropDialog({ creatorId }: { creatorId: string }) {
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  const finish = useCallback(() => {
+    setOpen(false);
+    router.refresh();
+  }, [router]);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <button
           type="button"
@@ -193,72 +276,7 @@ export function PhotoCropDialog({ creatorId }: { creatorId: string }) {
         <DialogHeader>
           <DialogTitle>Creator Photo</DialogTitle>
         </DialogHeader>
-
-        {!imgUrl ? (
-          <div className="space-y-3">
-            <p className="text-sm text-neutral-500">
-              Choose a photo — drag to reposition and zoom to adjust before saving. It&rsquo;s used as the
-              creator&rsquo;s avatar and card image everywhere on the site.
-            </p>
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleFile(file);
-              }}
-              className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded-md file:border-0 file:bg-violet-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-violet-700 hover:file:bg-violet-100"
-            />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-start justify-center gap-6">
-              <CropFrame
-                frame={{ w: 220, h: 220 }}
-                shape="circle"
-                label="Avatar"
-                imgUrl={imgUrl}
-                imgSize={imgSize!}
-                focal={focal}
-                zoom={zoom}
-                interactive
-                onDrag={handleDrag}
-              />
-              <CropFrame
-                frame={{ w: 128, h: 160 }}
-                shape="square"
-                label="Card"
-                imgUrl={imgUrl}
-                imgSize={imgSize!}
-                focal={focal}
-                zoom={zoom}
-              />
-            </div>
-            <p className="text-xs text-neutral-400 text-center">Drag the avatar preview to reposition — the card preview updates with it.</p>
-
-            <div className="space-y-1.5">
-              <label className="text-xs text-neutral-500">Zoom</label>
-              <input
-                type="range"
-                min={1}
-                max={3}
-                step={0.05}
-                value={zoom}
-                onChange={(e) => setZoom(Number(e.target.value))}
-                className="w-full accent-violet-600"
-              />
-            </div>
-
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
-
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="ghost" onClick={reset}>Choose Another</Button>
-              <Button type="button" onClick={handleSave} disabled={pending}>
-                {pending ? "Saving…" : "Save Photo"}
-              </Button>
-            </div>
-          </div>
-        )}
+        {open ? <PhotoCropEditor creatorId={creatorId} onDone={finish} /> : null}
       </DialogContent>
     </Dialog>
   );

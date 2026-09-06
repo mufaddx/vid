@@ -20,6 +20,11 @@ async function main() {
   await page.fill("#name", `Modal Creator ${uniq}`);
   await page.fill("#email", `modal.creator.${uniq}@example.com`);
   await page.click('button:has-text("Create Creator")');
+  // Creation now leads into an optional "Add a Photo" step (not an
+  // immediate close) — skip it to get back to the plain create+close path
+  // this check is verifying.
+  await page.waitForSelector("text=Add a Photo", { timeout: 8000 });
+  await page.click('button:has-text("Skip for now")');
   await page.waitForTimeout(1200);
   const dialogGoneCreator = (await page.locator('[role="dialog"]').count()) === 0;
   const rowExistsCreator = (await page.locator(`text=Modal Creator ${uniq}`).count()) > 0;

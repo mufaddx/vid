@@ -6,6 +6,20 @@ const FROM = process.env.EMAIL_FROM || "VIDLIX <hello@vidlix.in>";
 
 export type EmailAttachment = { filename: string; content: Buffer };
 
+/**
+ * Builds a proper "Display Name <address>" From header so replies/sends
+ * from a mailbox show a real name in the recipient's inbox instead of the
+ * bare address. Falls back to the plain address when there's no name.
+ */
+export function buildFromHeader(emailAddress: string, name?: string | null): string {
+  const trimmed = name?.trim();
+  if (!trimmed) return emailAddress;
+  // Quote the display name defensively (handles commas/etc.) and strip any
+  // embedded quotes so we can't break out of the quoted segment.
+  const safeName = trimmed.replace(/"/g, "");
+  return `"${safeName}" <${emailAddress}>`;
+}
+
 export type SendEmailInput = {
   to: string;
   subject: string;
