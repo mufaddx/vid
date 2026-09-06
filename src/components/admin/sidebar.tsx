@@ -19,33 +19,37 @@ import {
   Settings,
   Newspaper,
   Scale,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logoutAction } from "@/server/actions/auth";
 import { VidlixWordmark } from "@/components/vidlix-wordmark";
 import type { SessionAdmin } from "@/lib/auth";
+import { hasPermission, type Module } from "@/lib/permissions";
 
-const NAV = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/creators", label: "Creators", icon: Users },
-  { href: "/admin/brands", label: "Brands", icon: Building2 },
-  { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
-  { href: "/admin/collaborations", label: "Collaborations", icon: Handshake },
-  { href: "/admin/agreements", label: "Agreements", icon: FileSignature },
-  { href: "/admin/billing", label: "Billing", icon: Wallet },
-  { href: "/admin/inbox", label: "Inbox", icon: Inbox },
-  { href: "/admin/email-accounts", label: "Email Accounts", icon: MailPlus },
-  { href: "/admin/inquiries", label: "Inquiries", icon: Contact },
-  { href: "/admin/documents", label: "Documents", icon: FolderOpen },
-  { href: "/admin/blog", label: "Blog", icon: Newspaper },
-  { href: "/admin/legal", label: "Legal Pages", icon: Scale },
-  { href: "/admin/reports", label: "Reports", icon: BarChart3 },
-  { href: "/admin/notifications", label: "Notifications", icon: Bell },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
+const NAV: { href: string; label: string; icon: typeof LayoutDashboard; module: Module }[] = [
+  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, module: "dashboard" },
+  { href: "/admin/creators", label: "Creators", icon: Users, module: "creators" },
+  { href: "/admin/brands", label: "Brands", icon: Building2, module: "brands" },
+  { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone, module: "campaigns" },
+  { href: "/admin/collaborations", label: "Collaborations", icon: Handshake, module: "collaborations" },
+  { href: "/admin/agreements", label: "Agreements", icon: FileSignature, module: "agreements" },
+  { href: "/admin/billing", label: "Billing", icon: Wallet, module: "billing" },
+  { href: "/admin/inbox", label: "Inbox", icon: Inbox, module: "inbox" },
+  { href: "/admin/email-accounts", label: "Email Accounts", icon: MailPlus, module: "email-accounts" },
+  { href: "/admin/inquiries", label: "Inquiries", icon: Contact, module: "inquiries" },
+  { href: "/admin/documents", label: "Documents", icon: FolderOpen, module: "documents" },
+  { href: "/admin/blog", label: "Blog", icon: Newspaper, module: "blog" },
+  { href: "/admin/legal", label: "Legal Pages", icon: Scale, module: "legal" },
+  { href: "/admin/reports", label: "Reports", icon: BarChart3, module: "reports" },
+  { href: "/admin/notifications", label: "Notifications", icon: Bell, module: "notifications" },
+  { href: "/admin/employees", label: "Employees", icon: UserCog, module: "employees" },
+  { href: "/admin/settings", label: "Settings", icon: Settings, module: "settings" },
 ];
 
 export function AdminSidebar({ admin }: { admin: SessionAdmin }) {
   const pathname = usePathname();
+  const visibleNav = NAV.filter((item) => hasPermission(admin.role, item.module));
 
   return (
     <aside className="w-64 shrink-0 h-screen sticky top-0 flex flex-col bg-neutral-950 border-r border-neutral-800 text-neutral-300">
@@ -54,7 +58,7 @@ export function AdminSidebar({ admin }: { admin: SessionAdmin }) {
         <div className="text-[10px] tracking-[0.2em] text-violet-400 mt-1">ADMIN PANEL</div>
       </div>
       <nav className="flex-1 overflow-y-auto px-3 space-y-0.5">
-        {NAV.map((item) => {
+        {visibleNav.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
           return (

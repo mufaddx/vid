@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { slugify } from "@/lib/format";
 import { logActivity } from "@/lib/activity";
+import { hasPermission } from "@/lib/permissions";
 
 const brandSchema = z.object({
   name: z.string().min(2, "Brand name is required."),
@@ -26,6 +27,9 @@ export async function createBrandAction(
 ): Promise<BrandFormState> {
   const session = await getSession();
   if (!session) redirect("/admin/login");
+  if (!hasPermission(session.role, "brands")) {
+    return { error: "Your role does not have access to Brands." };
+  }
 
   const parsed = brandSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) {
@@ -88,6 +92,9 @@ export async function createCampaignAction(
 ): Promise<CampaignFormState> {
   const session = await getSession();
   if (!session) redirect("/admin/login");
+  if (!hasPermission(session.role, "campaigns")) {
+    return { error: "Your role does not have access to Campaigns." };
+  }
 
   const parsed = campaignSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) {

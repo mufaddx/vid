@@ -18,6 +18,7 @@ import {
   type CreatorManagementDetails,
   type BrandCollaborationDetails,
 } from "@/lib/agreement-details";
+import { hasPermission } from "@/lib/permissions";
 
 export type ActionResult = { ok: true; agreementId: string } | { ok: false; error: string };
 
@@ -38,6 +39,7 @@ export async function createCreatorManagementAgreementAction(input: {
 }): Promise<ActionResult> {
   const session = await getSession();
   if (!session) return { ok: false, error: "Not authorized." };
+  if (!hasPermission(session.role, "agreements")) return { ok: false, error: "Your role does not have access to Agreements." };
 
   const parsed = creatorManagementSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input." };
@@ -84,6 +86,7 @@ export async function updateCreatorManagementDetailsAction(
 ): Promise<ActionResult> {
   const session = await getSession();
   if (!session) return { ok: false, error: "Not authorized." };
+  if (!hasPermission(session.role, "agreements")) return { ok: false, error: "Your role does not have access to Agreements." };
 
   const agreement = await prisma.agreement.findUnique({ where: { id: agreementId } });
   if (!agreement) return { ok: false, error: "Agreement not found." };
@@ -123,6 +126,7 @@ export async function createBrandCollaborationAgreementAction(input: {
 }): Promise<ActionResult> {
   const session = await getSession();
   if (!session) return { ok: false, error: "Not authorized." };
+  if (!hasPermission(session.role, "agreements")) return { ok: false, error: "Your role does not have access to Agreements." };
 
   const parsed = brandCollaborationSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input." };
@@ -172,6 +176,7 @@ export async function updateBrandCollaborationDetailsAction(
 ): Promise<ActionResult> {
   const session = await getSession();
   if (!session) return { ok: false, error: "Not authorized." };
+  if (!hasPermission(session.role, "agreements")) return { ok: false, error: "Your role does not have access to Agreements." };
 
   const agreement = await prisma.agreement.findUnique({ where: { id: agreementId } });
   if (!agreement) return { ok: false, error: "Agreement not found." };

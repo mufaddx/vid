@@ -14,6 +14,7 @@ import { renderPayoutStatementPdf } from "@/lib/pdf/payout-statement-pdf";
 import { sendEmail } from "@/lib/email/send";
 import { invoiceCreatedEmail, paymentReceivedEmail, payoutReleasedEmail } from "@/lib/email/templates";
 import { formatDate, formatINR } from "@/lib/format";
+import { requirePermission } from "@/lib/permissions";
 
 const invoiceSchema = z.object({
   invoiceType: z.enum(["CREATOR_MANAGEMENT", "BRAND_CAMPAIGN"]),
@@ -31,6 +32,7 @@ const invoiceSchema = z.object({
 export async function createInvoiceAction(formData: FormData): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/admin/login");
+  await requirePermission(session, "billing");
 
   const data = invoiceSchema.parse(Object.fromEntries(formData.entries()));
   const total = data.subtotal + data.tax - data.discount;
@@ -131,6 +133,7 @@ const paymentSchema = z.object({
 export async function recordPaymentAction(invoiceId: string, formData: FormData): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/admin/login");
+  await requirePermission(session, "billing");
 
   const data = paymentSchema.parse(Object.fromEntries(formData.entries()));
 
@@ -223,6 +226,7 @@ const payoutSchema = z.object({
 export async function createPayoutAction(formData: FormData): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/admin/login");
+  await requirePermission(session, "billing");
 
   const data = payoutSchema.parse(Object.fromEntries(formData.entries()));
   const commissionAmount = Math.round(data.grossAmount * (data.commissionPercentage / 100));
@@ -264,6 +268,7 @@ export async function createPayoutAction(formData: FormData): Promise<void> {
 export async function markPayoutPaidAction(payoutId: string, formData: FormData): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/admin/login");
+  await requirePermission(session, "billing");
 
   const transactionReference = String(formData.get("transactionReference") || "");
 

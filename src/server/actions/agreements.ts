@@ -15,6 +15,7 @@ import { parseSections, stringifySections } from "@/lib/agreement-content";
 import { formatDate } from "@/lib/format";
 import { saveFile, safeFilename } from "@/lib/storage";
 import { renderAgreementPdf } from "@/lib/pdf/agreement-pdf";
+import { requirePermission } from "@/lib/permissions";
 
 const createSchema = z.object({
   templateId: z.string().min(1),
@@ -29,6 +30,7 @@ const createSchema = z.object({
 export async function createAgreementAction(formData: FormData): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/admin/login");
+  await requirePermission(session, "agreements");
 
   const raw = Object.fromEntries(formData.entries());
   const data = createSchema.parse(raw);
@@ -93,6 +95,7 @@ export async function createAgreementAction(formData: FormData): Promise<void> {
 export async function updateAgreementContentAction(id: string, formData: FormData): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/admin/login");
+  await requirePermission(session, "agreements");
 
   const sectionsJson = String(formData.get("sections") || "[]");
   await prisma.agreement.update({

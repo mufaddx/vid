@@ -8,6 +8,7 @@ import { getSession } from "@/lib/auth";
 import { slugify } from "@/lib/format";
 import { logActivity } from "@/lib/activity";
 import { computeTotalAudience } from "@/lib/audience";
+import { hasPermission } from "@/lib/permissions";
 
 const creatorSchema = z.object({
   name: z.string().min(2),
@@ -34,6 +35,9 @@ export async function createCreatorAction(
 ): Promise<CreatorFormState> {
   const session = await getSession();
   if (!session) redirect("/admin/login");
+  if (!hasPermission(session.role, "creators")) {
+    return { error: "Your role does not have access to Creators." };
+  }
 
   const raw = Object.fromEntries(formData.entries());
   const parsed = creatorSchema.safeParse(raw);
