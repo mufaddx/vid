@@ -27,7 +27,7 @@ export default async function NewPayoutPage({
   return (
     <div>
       <PageHeader title="New Payout" description="Split a campaign value into VIDLIX commission and creator share" />
-      <form action={createPayoutAction} className="p-8 max-w-xl space-y-5">
+      <form action={createPayoutAction} className="p-8 max-w-xl mx-auto space-y-5">
         <div className="space-y-1.5">
           <Label>Creator *</Label>
           <Select name="creatorId" defaultValue={selected?.id} required>

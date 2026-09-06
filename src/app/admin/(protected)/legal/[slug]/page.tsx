@@ -24,7 +24,7 @@ export default async function EditLegalPage({ params }: { params: Promise<{ slug
           </Button>
         }
       />
-      <div className="p-8 max-w-3xl">
+      <div className="p-8 max-w-3xl mx-auto">
         <form action={updateLegalPageAction.bind(null, slug)} className="space-y-5">
           <div className="space-y-1.5">
             <Label>Title</Label>

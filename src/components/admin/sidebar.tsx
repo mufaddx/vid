@@ -22,7 +22,6 @@ import {
   UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { logoutAction } from "@/server/actions/auth";
 import { VidlixWordmark } from "@/components/vidlix-wordmark";
 import type { SessionAdmin } from "@/lib/auth";
 import { hasPermission, type Module } from "@/lib/permissions";
@@ -78,16 +77,13 @@ export function AdminSidebar({ admin }: { admin: SessionAdmin }) {
           );
         })}
       </nav>
+      {/* Sign out lives in the top header now (see TopHeader) — this
+          bottom strip is just the signed-in admin's identity. */}
       <div className="p-4 border-t border-neutral-800">
-        <div className="text-xs text-neutral-400 mb-2">
+        <div className="text-xs text-neutral-400">
           <div className="text-neutral-200 font-medium">{admin.name}</div>
           <div>{admin.role.replaceAll("_", " ")}</div>
         </div>
-        <form action={logoutAction}>
-          <button className="text-xs text-neutral-500 hover:text-white transition-colors">
-            Sign out
-          </button>
-        </form>
       </div>
     </aside>
   );

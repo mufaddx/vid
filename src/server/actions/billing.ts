@@ -27,6 +27,9 @@ const invoiceSchema = z.object({
   tax: z.coerce.number().nonnegative().default(0),
   discount: z.coerce.number().nonnegative().default(0),
   dueDate: z.string().min(1),
+  // Manual override — never required to match the creator/brand's email
+  // on file; empty string means "use whatever's on file, if anything".
+  recipientEmail: z.string().email().optional().or(z.literal("")),
 });
 
 export async function createInvoiceAction(formData: FormData): Promise<void> {
@@ -103,7 +106,7 @@ export async function createInvoiceAction(formData: FormData): Promise<void> {
     creatorId: data.creatorId,
   });
 
-  const recipientEmail = data.invoiceType === "BRAND_CAMPAIGN" ? brand?.email : creator.email;
+  const recipientEmail = data.recipientEmail || (data.invoiceType === "BRAND_CAMPAIGN" ? brand?.email : creator.email);
   const recipientName = data.invoiceType === "BRAND_CAMPAIGN" ? brand?.name : creator.name;
   if (recipientEmail) {
     await sendEmail({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createInvoiceAction } from "@/server/actions/billing";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,8 +21,8 @@ import {
 } from "@/components/admin/agreement/preview-shell";
 import { formatDate, formatINR } from "@/lib/format";
 
-type Creator = { id: string; name: string };
-type Brand = { id: string; name: string };
+type Creator = { id: string; name: string; email: string | null };
+type Brand = { id: string; name: string; email: string | null };
 type Campaign = { id: string; name: string; brandId: string };
 
 type InvoiceType = "CREATOR_MANAGEMENT" | "BRAND_CAMPAIGN";
@@ -53,10 +53,23 @@ export function InvoiceForm({
   const [tax, setTax] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [dueDate, setDueDate] = useState(defaultDueDate);
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [recipientTouched, setRecipientTouched] = useState(false);
 
   const isBrandInvoice = invoiceType === "BRAND_CAMPAIGN";
   const creatorName = creators.find((c) => c.id === creatorId)?.name ?? "—";
   const brandName = brands.find((b) => b.id === brandId)?.name ?? "—";
+
+  // Auto-fill "Send Invoice To" from the selected party's email on file —
+  // but never lock it: an admin who's typed their own override keeps it
+  // even if they then change the creator/brand/type selection.
+  useEffect(() => {
+    if (recipientTouched) return;
+    const auto = isBrandInvoice
+      ? brands.find((b) => b.id === brandId)?.email
+      : creators.find((c) => c.id === creatorId)?.email;
+    setRecipientEmail(auto ?? "");
+  }, [creatorId, brandId, isBrandInvoice, creators, brands, recipientTouched]);
   const campaignName = campaigns.find((c) => c.id === campaignId)?.name;
   const visibleCampaigns = brandId ? campaigns.filter((c) => c.brandId === brandId) : campaigns;
 
@@ -153,6 +166,21 @@ export function InvoiceForm({
         <div className="space-y-1.5">
           <Label htmlFor="dueDate">Due Date *</Label>
           <Input id="dueDate" name="dueDate" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} required />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="recipientEmail">Send Invoice To</Label>
+          <Input
+            id="recipientEmail"
+            name="recipientEmail"
+            type="email"
+            placeholder="Auto-filled from creator/brand email — editable"
+            value={recipientEmail}
+            onChange={(e) => { setRecipientEmail(e.target.value); setRecipientTouched(true); }}
+          />
+          <p className="text-xs text-neutral-400">
+            Pre-filled when available, but never required to match — replace it with any address.
+          </p>
         </div>
 
         <Button type="submit">Create Invoice</Button>

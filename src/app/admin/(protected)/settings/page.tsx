@@ -14,7 +14,7 @@ export default async function SettingsPage() {
     <div>
       <PageHeader title="Settings" description="Company profile, letterhead and billing defaults" />
       <div className="p-8">
-        <Tabs defaultValue="general" className="max-w-3xl">
+        <Tabs defaultValue="general" className="max-w-3xl mx-auto">
           <TabsList>
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="footer">Website Footer</TabsTrigger>

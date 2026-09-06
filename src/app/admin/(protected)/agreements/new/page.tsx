@@ -37,7 +37,7 @@ export default async function NewAgreementTypePage({
   return (
     <div>
       <PageHeader title="New Agreement" description="Choose the agreement type to continue" />
-      <div className="p-8 max-w-3xl grid gap-4">
+      <div className="p-8 max-w-3xl mx-auto grid gap-4">
         {options.map((opt) => (
           <Link
             key={opt.href}

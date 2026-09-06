@@ -15,7 +15,7 @@ export default async function EditCreatorPage({
   return (
     <div>
       <PageHeader title={`Edit ${creator.name}`} description="Update creator profile details" />
-      <div className="p-8 max-w-2xl">
+      <div className="p-8 max-w-2xl mx-auto">
         <EditCreatorForm
           creator={{
             ...creator,

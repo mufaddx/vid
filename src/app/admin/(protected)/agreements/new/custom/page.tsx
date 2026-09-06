@@ -38,7 +38,7 @@ export default async function NewAgreementPage({
   return (
     <div>
       <PageHeader title="New Custom Agreement" description="NDA, custom letters and other template-based documents" />
-      <form action={createAgreementAction} className="p-8 max-w-2xl space-y-5">
+      <form action={createAgreementAction} className="p-8 max-w-2xl mx-auto space-y-5">
         <div className="space-y-1.5">
           <Label>Template *</Label>
           <Select name="templateId" required defaultValue={templates[0]?.id}>

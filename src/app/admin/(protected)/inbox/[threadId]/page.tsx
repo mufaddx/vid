@@ -30,7 +30,7 @@ export default async function ThreadPage({
         title={thread.subject}
         description={`${thread.creatorEmailAccount.creator?.name ?? "Standalone mailbox"} · ${thread.creatorEmailAccount.emailAddress}`}
       />
-      <div className="p-8 max-w-3xl space-y-4">
+      <div className="p-8 max-w-3xl mx-auto space-y-4">
         {thread.messages.map((m) => (
           <div
             key={m.id}

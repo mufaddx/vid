@@ -10,8 +10,8 @@ export default async function NewInvoicePage({
   const { creatorId, invoiceType } = await searchParams;
 
   const [creators, brands, campaigns] = await Promise.all([
-    prisma.creator.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
-    prisma.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.creator.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, email: true } }),
+    prisma.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, email: true } }),
     prisma.campaign.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, brandId: true } }),
   ]);
 
