@@ -17,19 +17,32 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default async function HomePage() {
-  const creators = await prisma.creator.findMany({
+function fetchCreators() {
+  return prisma.creator.findMany({
     where: { status: "ACTIVE" },
     include: { socialAccounts: { include: { metric: true } } },
     orderBy: [{ featured: "desc" }, { orbitPriority: "asc" }],
     take: 8,
   });
+}
 
-  const allMetrics = await prisma.socialMetric.findMany({ include: { socialAccount: true } });
-  const networkAudience = allMetrics.reduce(
-    (s, m) => s + (m.socialAccount.platform === "YOUTUBE" ? m.subscribers : m.followers),
-    0,
-  );
+export default async function HomePage() {
+  // A transient DB error here used to throw uncaught, and with no
+  // error.tsx in place, Next fell back to its bare unstyled default page.
+  // Degrade to an empty-creators homepage instead — everything below
+  // already handles `cardData.length === 0` gracefully.
+  let creators: Awaited<ReturnType<typeof fetchCreators>> = [];
+  let networkAudience = 0;
+  try {
+    creators = await fetchCreators();
+    const allMetrics = await prisma.socialMetric.findMany({ include: { socialAccount: true } });
+    networkAudience = allMetrics.reduce(
+      (s, m) => s + (m.socialAccount.platform === "YOUTUBE" ? m.subscribers : m.followers),
+      0,
+    );
+  } catch (err) {
+    console.error("[HomePage] failed to load creators/metrics", err);
+  }
 
   const cardData = creators.map((c) => ({
     slug: c.slug,
