@@ -16,7 +16,10 @@ async function main() {
   // Reuse an existing draft agreement for rahul if present, else create one.
   let agreement = await prisma.agreement.findFirst({ where: { creatorId: creator.id, status: "DRAFT" } });
   if (!agreement) {
-    await page.goto(`${BASE}/admin/agreements/new?creatorId=${creator.id}`);
+    // /admin/agreements/new is now just the type-selector cards (no form) —
+    // the actual legacy/custom form with a submit button lives one level
+    // deeper, at /admin/agreements/new/custom (see NewAgreementDialog).
+    await page.goto(`${BASE}/admin/agreements/new/custom?creatorId=${creator.id}`);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/admin\/agreements\/(?!new)[a-z0-9]+$/i, { timeout: 15000 });
   } else {
