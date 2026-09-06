@@ -14,7 +14,21 @@ import { PhotoCropDialog } from "@/components/admin/creator/photo-crop-dialog";
 import { markPayoutPaidAction } from "@/server/actions/billing";
 import { computeTotalAudience } from "@/lib/audience";
 import { formatCompactNumber, formatDate, formatINR, timeAgo } from "@/lib/format";
-import { FileSignature, Receipt, Mail, FolderOpen, Activity as ActivityIcon, Handshake } from "lucide-react";
+import {
+  FileSignature,
+  Receipt,
+  Mail,
+  FolderOpen,
+  Activity as ActivityIcon,
+  Handshake,
+  Users,
+  Radio,
+  Percent,
+  CalendarClock,
+  MapPin,
+  Tag,
+  Building2,
+} from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { getManagedCreatorIds } from "@/lib/creator-scope";
 
@@ -65,24 +79,34 @@ export default async function CreatorDetailPage({
   return (
     <div>
       <Tabs defaultValue="overview">
-        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 border-b border-violet-100 px-8 pt-8">
+        <div className="sticky top-0 z-20 bg-gradient-to-b from-violet-50/70 via-white/95 to-white/95 backdrop-blur supports-[backdrop-filter]:from-violet-50/60 border-b border-violet-100 px-8 pt-8">
           <div className="flex items-start justify-between gap-4 mb-6">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-5">
               <div className="relative shrink-0">
-                <Avatar className="size-16 ring-2 ring-violet-100">
+                <Avatar className="size-20 ring-4 ring-white shadow-md shadow-violet-200/50">
                   <AvatarImage src={creator.profileImage ?? undefined} />
-                  <AvatarFallback className="text-lg bg-violet-50 text-violet-700">{creator.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="text-xl font-semibold bg-gradient-to-br from-violet-100 to-violet-50 text-violet-700">
+                    {creator.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 <PhotoCropDialog creatorId={id} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-neutral-900">{creator.name}</h1>
+                  <h1 className="text-2xl font-bold tracking-tight text-neutral-900">{creator.name}</h1>
                   <StatusBadge status={creator.status} />
                   {creator.featured ? <StatusBadge status="ACTIVE" /> : null}
                 </div>
-                <div className="text-sm text-neutral-500 mt-0.5">
-                  {creator.category ?? "Uncategorized"} · {creator.city ?? "—"}
+                <div className="flex items-center gap-3 text-sm text-neutral-500 mt-1.5">
+                  <span className="inline-flex items-center gap-1">
+                    <Tag className="size-3.5 text-neutral-400" />
+                    {creator.category ?? "Uncategorized"}
+                  </span>
+                  <span className="text-neutral-300">·</span>
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="size-3.5 text-neutral-400" />
+                    {creator.city ?? "—"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -95,7 +119,7 @@ export default async function CreatorDetailPage({
                   <FileSignature className="size-4" /> Create Agreement
                 </Link>
               </Button>
-              <Button asChild>
+              <Button asChild className="shadow-sm shadow-violet-300/40">
                 <Link href={`/admin/billing/invoices/new?creatorId=${id}`}>
                   <Receipt className="size-4" /> Create Invoice
                 </Link>
@@ -116,20 +140,45 @@ export default async function CreatorDetailPage({
 
         <div className="p-8">
 
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="rounded-xl border border-violet-200 bg-violet-50 p-5 md:col-span-1">
-                <div className="text-xs font-medium text-violet-700">Total Audience</div>
-                <div className="text-3xl font-bold text-violet-900 mt-1">{formatCompactNumber(totalAudience)}</div>
+          <TabsContent value="overview" className="space-y-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-600 to-violet-500 p-4 text-white shadow-sm shadow-violet-300/40">
+                <div className="inline-flex items-center justify-center size-8 rounded-lg bg-white/15 mb-3">
+                  <Users className="size-4" />
+                </div>
+                <div className="text-xs text-violet-100 leading-tight mb-1">Total Audience</div>
+                <div className="text-lg font-bold tracking-tight">{formatCompactNumber(totalAudience)}</div>
               </div>
-              <div className="md:col-span-2 rounded-xl border border-neutral-200 bg-white p-5">
-                <div className="text-xs font-medium text-neutral-500 mb-2">About</div>
-                <p className="text-sm text-neutral-700">{creator.bio ?? "No bio yet."}</p>
+              <div className="rounded-2xl border border-neutral-200 bg-white p-4 hover:shadow-sm hover:border-neutral-300 transition-all">
+                <div className="inline-flex items-center justify-center size-8 rounded-lg bg-sky-50 mb-3">
+                  <Radio className="size-4 text-sky-600" />
+                </div>
+                <div className="text-xs text-neutral-500 leading-tight mb-1">Connected Platforms</div>
+                <div className="text-lg font-bold tracking-tight text-neutral-900">{creator.socialAccounts.length}</div>
+              </div>
+              <div className="rounded-2xl border border-neutral-200 bg-white p-4 hover:shadow-sm hover:border-neutral-300 transition-all">
+                <div className="inline-flex items-center justify-center size-8 rounded-lg bg-emerald-50 mb-3">
+                  <Percent className="size-4 text-emerald-600" />
+                </div>
+                <div className="text-xs text-neutral-500 leading-tight mb-1">Commission Rate</div>
+                <div className="text-lg font-bold tracking-tight text-neutral-900">{Number(creator.commissionPercentage ?? 0)}%</div>
+              </div>
+              <div className="rounded-2xl border border-neutral-200 bg-white p-4 hover:shadow-sm hover:border-neutral-300 transition-all">
+                <div className="inline-flex items-center justify-center size-8 rounded-lg bg-amber-50 mb-3">
+                  <CalendarClock className="size-4 text-amber-600" />
+                </div>
+                <div className="text-xs text-neutral-500 leading-tight mb-1">Creator Since</div>
+                <div className="text-lg font-bold tracking-tight text-neutral-900">{creator.journeyStartYear ?? "—"}</div>
               </div>
             </div>
 
+            <div className="rounded-2xl border border-neutral-200 bg-white p-5">
+              <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">About</div>
+              <p className="text-sm text-neutral-700 leading-relaxed">{creator.bio ?? "No bio yet."}</p>
+            </div>
+
             <div>
-              <h3 className="text-sm font-semibold text-neutral-700 mb-3">Financial Summary</h3>
+              <h3 className="text-sm font-semibold text-neutral-800 mb-3">Financial Summary</h3>
               <FinancialSummary
                 managementFee={Number(creator.managementFee ?? 0)}
                 totalBrandRevenue={totalBrandRevenue}
@@ -142,16 +191,29 @@ export default async function CreatorDetailPage({
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-neutral-700 mb-3">Collaborations</h3>
+              <h3 className="text-sm font-semibold text-neutral-800 mb-3">Collaborations</h3>
               {collaborations.length === 0 ? (
                 <EmptyState icon={Handshake} title="No collaborations yet" />
               ) : (
-                <div className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100">
+                <div className="grid sm:grid-cols-2 gap-3">
                   {collaborations.map((cc) => (
-                    <div key={cc.id} className="flex items-center justify-between px-5 py-3 text-sm">
-                      <div>
-                        <span className="font-medium text-neutral-900">{cc.collaboration.brand.name}</span>
-                        {cc.collaboration.campaign ? <span className="text-neutral-400"> · {cc.collaboration.campaign.name}</span> : null}
+                    <div
+                      key={cc.id}
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white p-4 hover:shadow-sm hover:border-neutral-300 transition-all"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex items-center justify-center size-9 rounded-xl bg-violet-50 text-violet-700 font-semibold text-xs shrink-0">
+                          {cc.collaboration.brand.name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium text-neutral-900 truncate">{cc.collaboration.brand.name}</div>
+                          {cc.collaboration.campaign ? (
+                            <div className="text-xs text-neutral-400 flex items-center gap-1 truncate">
+                              <Building2 className="size-3 shrink-0" />
+                              {cc.collaboration.campaign.name}
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
                       <StatusBadge status={cc.collaboration.status} />
                     </div>
