@@ -1,10 +1,19 @@
-import { Page, View, StyleSheet } from "@react-pdf/renderer";
+import { Page, View, StyleSheet, Font } from "@react-pdf/renderer";
 import { Text } from "./Text";
 import type { CompanySettings } from "@prisma/client";
 import { pdfTheme } from "@/lib/pdf/theme";
 import { SOCIAL_ICONS } from "@/lib/pdf/social-icons";
 import { VidlixWordmark } from "@/lib/pdf/wordmark";
 import type { ReactNode } from "react";
+
+// Belt-and-suspenders alongside the webpack alias in next.config.ts (the
+// actual fix for @react-pdf/hyphenate's broken package "exports" map —
+// see the comment there for the full story): explicitly telling
+// react-pdf to never split a word keeps every PDF route's behavior
+// correct even if the hyphenation codepath is ever reached some other
+// way. Word-wrapping at spaces is unaffected — this only disables
+// mid-word splitting, which a legal/financial document doesn't need.
+Font.registerHyphenationCallback((word) => [word]);
 
 const styles = StyleSheet.create({
   page: {

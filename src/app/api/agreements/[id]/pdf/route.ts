@@ -8,20 +8,37 @@ import { parseDetails, resolveSocialHandles, type CreatorManagementDetails, type
 import { safeFilename } from "@/lib/storage";
 
 // On-demand PDF for an agreement at any stage (draft, pending signature,
-// or completed) — admin-only. Once an agreement is COMPLETED the locked
-// final PDF is served from storage via /api/files instead; this route
-// always renders the *current* content live, which is what an admin
-// wants when previewing a draft before sending it (spec §70/§166).
+// or completed) — admin-only, OR the agreement's own signer using their
+// signing link's token (spec: a signer should be able to download a copy
+// of what they just signed immediately, without waiting for every party
+// to countersign). Once an agreement is COMPLETED the locked final PDF is
+// also servable from storage via /api/files; this route always renders
+// the *current* content live, which is what an admin wants when
+// previewing a draft before sending it (spec §70/§166), and what a
+// signer wants right after signing their half.
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
+  const token = req.nextUrl.searchParams.get("token");
+
   const session = await getSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    // No admin session — only allow through if the token actually belongs
+    // to THIS agreement's signing link (creator or brand side).
+    const tokenMatch = await prisma.agreement.findFirst({
+      where: { id, OR: [{ signingToken: token }, { brandSigningToken: token }] },
+      select: { id: true },
+    });
+    if (!tokenMatch) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
-  const { id } = await params;
   const agreement = await prisma.agreement.findUnique({
     where: { id },
     include: { creator: { include: { socialAccounts: true } }, brand: true, signatures: true },

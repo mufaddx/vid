@@ -33,6 +33,7 @@ export default async function AgreementSigningPage({
   return (
     <SigningFlow
       token={token}
+      agreementId={agreement.id}
       status={agreement.status}
       agreementNumber={agreement.agreementNumber}
       typeLabel={agreement.type.replaceAll("_", " ") + " Agreement"}

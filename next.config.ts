@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -53,6 +54,34 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
     ];
+  },
+
+  // @react-pdf/textkit statically imports "@react-pdf/hyphenate/en-us" to
+  // auto-hyphenate wrapped text. That package's package.json "exports"
+  // map declares only an "import" condition (no "require", not even for
+  // its "./*" wildcard) — a real, unfixed gap in its one and only
+  // published version (0.1.0). Depending on how that specifier ends up
+  // getting resolved at runtime, that can throw
+  // ERR_PACKAGE_PATH_NOT_EXPORTED and take down PDF generation entirely.
+  // Aliasing it to a local no-op shim (see src/lib/pdf/hyphenate-en-us-shim.js)
+  // sidesteps the broken package's resolution altogether — every PDF in
+  // the app is plain-English legal/financial copy that doesn't need
+  // automatic mid-word hyphenation anyway. Configured for both: `next dev`
+  // runs on Turbopack (its own resolver, own config key) while `next build`
+  // runs on webpack (see package.json's "build" script) — without a
+  // `turbopack` entry here, Turbopack refuses to start at all as soon as
+  // it sees an unrecognized `webpack()` config function present.
+  turbopack: {
+    resolveAlias: {
+      "@react-pdf/hyphenate/en-us": "./src/lib/pdf/hyphenate-en-us-shim.js",
+    },
+  },
+  webpack(config) {
+    config.resolve.alias["@react-pdf/hyphenate/en-us"] = path.resolve(
+      __dirname,
+      "src/lib/pdf/hyphenate-en-us-shim.js",
+    );
+    return config;
   },
 };
 

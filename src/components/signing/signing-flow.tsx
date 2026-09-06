@@ -20,6 +20,7 @@ type Step = "review" | "otp" | "sign" | "done";
 
 export function SigningFlow({
   token,
+  agreementId,
   status,
   agreementNumber,
   typeLabel,
@@ -36,6 +37,7 @@ export function SigningFlow({
   finalPdfAssetId,
 }: {
   token: string;
+  agreementId: string;
   status: string;
   agreementNumber: string;
   typeLabel: string;
@@ -89,13 +91,18 @@ export function SigningFlow({
               ? `Your agreement ${agreementNumber} has been successfully completed.`
               : `Thank you — your signature on agreement ${agreementNumber} has been recorded. It will be finalized once every party has signed.`}
           </p>
-          {downloadAssetId ? (
-            <Button asChild className="mt-6">
-              <a href={`/api/files/${downloadAssetId}?token=${token}`} target="_blank">
-                Download Signed Agreement
-              </a>
-            </Button>
-          ) : null}
+          <Button asChild className="mt-6">
+            <a
+              href={
+                downloadAssetId
+                  ? `/api/files/${downloadAssetId}?token=${token}`
+                  : `/api/agreements/${agreementId}/pdf?token=${token}`
+              }
+              target="_blank"
+            >
+              {downloadAssetId ? "Download Signed Agreement" : "Download PDF"}
+            </a>
+          </Button>
         </div>
       </Shell>
     );
