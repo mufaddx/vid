@@ -49,6 +49,13 @@ export default async function ThreadPage({
 
         <form action={reply} className="rounded-xl border border-neutral-200 bg-white p-4 space-y-3">
           <Textarea name="body" rows={4} placeholder={`Reply from ${thread.creatorEmailAccount.emailAddress}…`} required />
+          <input
+            type="file"
+            name="attachments"
+            multiple
+            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+            className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded-md file:border-0 file:bg-violet-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-violet-700 hover:file:bg-violet-100"
+          />
           <div className="flex justify-end">
             <Button type="submit">Send Reply</Button>
           </div>

@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { sendEmail } from "@/lib/email/send";
+import { readAttachmentsFromFormData } from "@/lib/email/attachments";
 
 export async function sendInboxReplyAction(threadId: string, formData: FormData): Promise<void> {
   const session = await getSession();
@@ -24,6 +25,7 @@ export async function sendInboxReplyAction(threadId: string, formData: FormData)
   const toEmail = lastInbound?.fromEmail ?? "unknown@brand.example";
   const subject = `Re: ${thread.subject}`;
   const htmlBody = body.replace(/\n/g, "<br/>");
+  const attachments = await readAttachmentsFromFormData(formData, "attachments");
 
   await sendEmail({
     from: thread.creatorEmailAccount.emailAddress,
@@ -31,6 +33,7 @@ export async function sendInboxReplyAction(threadId: string, formData: FormData)
     subject,
     html: htmlBody,
     template: "inbox_reply",
+    attachments,
   });
 
   await prisma.emailMessage.create({
@@ -71,6 +74,7 @@ export async function sendComposeEmailAction(formData: FormData): Promise<void> 
   if (!session) redirect("/admin/login");
 
   const data = composeSchema.parse(Object.fromEntries(formData.entries()));
+  const attachments = await readAttachmentsFromFormData(formData, "attachments");
 
   const account = await prisma.creatorEmailAccount.findUniqueOrThrow({
     where: { id: data.creatorEmailAccountId },
@@ -84,6 +88,7 @@ export async function sendComposeEmailAction(formData: FormData): Promise<void> 
     subject: data.subject,
     html: htmlBody,
     template: "inbox_compose",
+    attachments,
   });
 
   const thread = await prisma.emailThread.create({

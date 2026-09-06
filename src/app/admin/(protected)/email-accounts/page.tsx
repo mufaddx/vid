@@ -4,25 +4,31 @@ import { PageHeader } from "@/components/admin/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
 import { Mail } from "lucide-react";
+import { AddEmailAccountDialog } from "@/components/admin/email-accounts/add-email-account-dialog";
 
 export default async function EmailAccountsPage() {
-  const accounts = await prisma.creatorEmailAccount.findMany({
-    include: { creator: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [accounts, creators] = await Promise.all([
+    prisma.creatorEmailAccount.findMany({
+      include: { creator: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.creator.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
 
   return (
     <div>
       <PageHeader
         title="Email Accounts"
-        description="Official @vidlix.in mailboxes managed on behalf of creators"
+        description="Official @vidlix.in mailboxes — standalone or assigned to a creator"
+        actions={<AddEmailAccountDialog creators={creators} />}
       />
       <div className="p-8">
         {accounts.length === 0 ? (
           <EmptyState
             icon={Mail}
-            title="No creator email accounts yet"
-            description="Create one from a creator's profile — Email tab."
+            title="No email accounts yet"
+            description="Create a mailbox — it doesn't need to be linked to a creator first."
+            action={<AddEmailAccountDialog creators={creators} />}
           />
         ) : (
           <div className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100">

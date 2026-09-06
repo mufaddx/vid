@@ -73,6 +73,17 @@ export function ComposeDialog({ mailboxes }: { mailboxes: Mailbox[] }) {
             <Label>Message</Label>
             <Textarea name="body" rows={8} required />
           </div>
+          <div className="space-y-1.5">
+            <Label>Attachments (optional)</Label>
+            <input
+              type="file"
+              name="attachments"
+              multiple
+              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+              className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded-md file:border-0 file:bg-violet-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-violet-700 hover:file:bg-violet-100"
+            />
+            <p className="text-xs text-neutral-400">PDF and common file types, up to 10MB total.</p>
+          </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
             <Button type="submit" disabled={pending || !fromId}>{pending ? "Sending…" : "Send"}</Button>

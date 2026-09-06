@@ -4,12 +4,15 @@ import { prisma } from "@/lib/prisma";
 
 const FROM = process.env.EMAIL_FROM || "VIDLIX <hello@vidlix.in>";
 
+export type EmailAttachment = { filename: string; content: Buffer };
+
 export type SendEmailInput = {
   to: string;
   subject: string;
   html: string;
   template?: string;
   from?: string; // overrides EMAIL_FROM — e.g. a specific creator mailbox
+  attachments?: EmailAttachment[];
 };
 
 /**
@@ -23,6 +26,10 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = input.from || FROM;
 
+  const attachmentNote = input.attachments?.length
+    ? ` [attachments: ${input.attachments.map((a) => a.filename).join(", ")}]`
+    : "";
+
   if (!apiKey) {
     await prisma.emailLog.create({
       data: {
@@ -30,11 +37,11 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
         fromEmail: from,
         subject: input.subject,
         template: input.template,
-        body: input.html,
+        body: input.html + attachmentNote,
         status: "MOCKED",
       },
     });
-    console.log(`[email:mocked] from=${from} to=${input.to} subject="${input.subject}"`);
+    console.log(`[email:mocked] from=${from} to=${input.to} subject="${input.subject}"${attachmentNote}`);
     return;
   }
 
@@ -45,6 +52,7 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
       to: input.to,
       subject: input.subject,
       html: input.html,
+      attachments: input.attachments?.map((a) => ({ filename: a.filename, content: a.content })),
     });
     await prisma.emailLog.create({
       data: {
