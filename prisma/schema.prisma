@@ -39,6 +39,7 @@ model AdminUser {
   invoicesCreated   Invoice[]       @relation("InvoiceCreatedBy")
   activityLogs      ActivityLog[]
   sessions          AdminSession[]
+  loginOtps         AdminLoginOtp[]
 
   @@map("admin_users")
 }
@@ -597,6 +598,23 @@ model OtpChallenge {
   createdAt   DateTime  @default(now())
 
   @@map("otp_challenges")
+}
+
+// Second factor for admin panel login — deliberately separate from
+// OtpChallenge above (which is scoped to an Agreement, for the e-sign
+// flow) rather than making agreementId optional there and risking that
+// flow's behavior.
+model AdminLoginOtp {
+  id          String    @id @default(cuid())
+  adminUserId String
+  admin       AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  codeHash    String
+  expiresAt   DateTime
+  attempts    Int       @default(0)
+  verified    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@map("admin_login_otps")
 }
 
 // ---------------------------------------------------------------------------

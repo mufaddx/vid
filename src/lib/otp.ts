@@ -64,3 +64,54 @@ export async function verifyOtp(
 
   return { ok: true };
 }
+
+// ---------------------------------------------------------------------------
+// Admin panel login 2FA — same code/hash/expiry/attempt-limit mechanics as
+// the e-sign OTP above, but scoped to AdminUser instead of Agreement so
+// the two flows can't interfere with each other.
+// ---------------------------------------------------------------------------
+
+export async function issueAdminLoginOtp(adminId: string, email: string): Promise<void> {
+  const code = randomInt(0, 1_000_000).toString().padStart(6, "0");
+
+  await prisma.adminLoginOtp.create({
+    data: {
+      adminUserId: adminId,
+      codeHash: hashCode(code),
+      expiresAt: new Date(Date.now() + OTP_TTL_MS),
+    },
+  });
+
+  await sendEmail({
+    to: email,
+    subject: "Your VIDLIX admin login code",
+    html: otpEmail({ code }),
+    template: "admin_login_otp",
+  });
+}
+
+export async function verifyAdminLoginOtp(adminId: string, code: string): Promise<OtpVerifyResult> {
+  const challenge = await prisma.adminLoginOtp.findFirst({
+    where: { adminUserId: adminId, verified: false },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!challenge) return { ok: false, reason: "not_found" };
+  if (challenge.expiresAt < new Date()) return { ok: false, reason: "expired" };
+  if (challenge.attempts >= MAX_ATTEMPTS) return { ok: false, reason: "too_many_attempts" };
+
+  if (challenge.codeHash !== hashCode(code)) {
+    await prisma.adminLoginOtp.update({
+      where: { id: challenge.id },
+      data: { attempts: { increment: 1 } },
+    });
+    return { ok: false, reason: "invalid_code" };
+  }
+
+  await prisma.adminLoginOtp.update({
+    where: { id: challenge.id },
+    data: { verified: true },
+  });
+
+  return { ok: true };
+}

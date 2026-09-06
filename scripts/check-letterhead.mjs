@@ -1,5 +1,6 @@
 import { chromium } from "playwright";
 import { PrismaClient } from "@prisma/client";
+import { adminLogin } from "./lib/admin-login.mjs";
 
 const BASE = "http://127.0.0.1:3000";
 const prisma = new PrismaClient();
@@ -8,11 +9,7 @@ async function main() {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 
-  await page.goto(`${BASE}/admin/login`);
-  await page.fill("#email", "admin@vidlix.in");
-  await page.fill("#password", "vidlix@admin123");
-  await page.click('button[type="submit"]');
-  await page.waitForURL(`${BASE}/admin/dashboard`, { timeout: 15000 });
+  await adminLogin(page, { base: BASE });
 
   const creator = await prisma.creator.findFirstOrThrow({ where: { slug: "rahul-sharma" } });
 
