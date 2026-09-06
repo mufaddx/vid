@@ -15,7 +15,7 @@ import {
   PreviewSectionHeading,
   PreviewSignatureRow,
 } from "@/components/admin/agreement/preview-shell";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, ChevronUp, ChevronDown } from "lucide-react";
 
 export function AgreementEditor({
   agreementId,
@@ -44,6 +44,17 @@ export function AgreementEditor({
     setSections((prev) => prev.filter((s) => s.id !== id));
   }
 
+  function moveSection(id: string, dir: -1 | 1) {
+    setSections((prev) => {
+      const i = prev.findIndex((s) => s.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+  }
+
   function save() {
     const fd = new FormData();
     fd.set("sections", JSON.stringify(sections));
@@ -69,7 +80,7 @@ export function AgreementEditor({
           </p>
         )}
 
-        {sections.map((section) => (
+        {sections.map((section, i) => (
           <div key={section.id} className="rounded-xl border border-neutral-200 bg-white p-4 space-y-2">
             <div className="flex items-center gap-2">
               <Input
@@ -79,9 +90,17 @@ export function AgreementEditor({
                 className="font-medium"
               />
               {!readOnly ? (
-                <Button variant="ghost" size="icon" onClick={() => removeSection(section.id)}>
-                  <Trash2 className="size-4 text-neutral-400" />
-                </Button>
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <Button variant="ghost" size="icon" disabled={i === 0} onClick={() => moveSection(section.id, -1)}>
+                    <ChevronUp className="size-4 text-neutral-400" />
+                  </Button>
+                  <Button variant="ghost" size="icon" disabled={i === sections.length - 1} onClick={() => moveSection(section.id, 1)}>
+                    <ChevronDown className="size-4 text-neutral-400" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => removeSection(section.id)}>
+                    <Trash2 className="size-4 text-neutral-400" />
+                  </Button>
+                </div>
               ) : null}
             </div>
             <Textarea

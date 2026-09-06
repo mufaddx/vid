@@ -4,6 +4,9 @@
 // `content` sections model used by older/custom agreements, so existing
 // rows and code paths are untouched (see Agreement.details in schema.prisma).
 
+import type { AgreementSection } from "@/lib/agreement-content";
+export type { AgreementSection };
+
 export type ChargeType =
   | "MONTHLY"
   | "PER_VIDEO"
@@ -108,6 +111,12 @@ export type CreatorManagementDetails = {
   socialHandles: CreatorSocialHandles;
   platformCommissions: CreatorPlatformCommissions;
   terms: string; // short management terms paragraph
+  // Unlimited, fully custom heading+body sections beyond the built-in
+  // "Management Terms" above (e.g. Payment Terms, Content Usage Rights,
+  // Termination Conditions, Confidentiality) — rendered after Management
+  // Terms in both the live preview and the PDF, and free to overflow onto
+  // additional pages (the letterhead repeats on every page automatically).
+  customSections: AgreementSection[];
 };
 
 export function emptyCreatorManagementDetails(): CreatorManagementDetails {
@@ -122,6 +131,7 @@ export function emptyCreatorManagementDetails(): CreatorManagementDetails {
       "The Creator appoints VIDLIX as their exclusive management representative to secure, negotiate and administer brand collaborations across the Creator's social media presence, effective the Agreement Date above.\n\n" +
       "VIDLIX agrees to act in good faith and provide transparent accounting of revenue and commission for each platform managed. Content created by the Creator remains the Creator's intellectual property.\n\n" +
       "This Agreement remains in effect until terminated in writing by either party through a separate Cancellation Agreement, and is governed by the laws of India.",
+    customSections: [],
   };
 }
 
@@ -244,6 +254,10 @@ export type BrandCollaborationDetails = {
   extraPricingItems: PricingLineItem[]; // manual line items beyond deliverables/advertising
   taxPercentage: number;
   paymentTerms: string;
+  // Unlimited, fully custom heading+body sections beyond the built-in
+  // Payment Terms above (e.g. Content Usage Rights, Termination
+  // Conditions, Confidentiality) — see CreatorManagementDetails.customSections.
+  customSections: AgreementSection[];
 };
 
 export function emptyBrandCollaborationDetails(): BrandCollaborationDetails {
@@ -274,6 +288,7 @@ export function emptyBrandCollaborationDetails(): BrandCollaborationDetails {
     extraPricingItems: [],
     taxPercentage: 0,
     paymentTerms: "50% advance, balance on delivery. Payment due within 15 days of invoice.",
+    customSections: [],
   };
 }
 
@@ -334,42 +349,13 @@ export function computeBrandCollaborationTotals(details: BrandCollaborationDetai
   return { lineItems, subtotal, tax, total };
 }
 
-// --- One-page budget guard ----------------------------------------------
-// react-pdf will happily flow content onto a second page if it doesn't
-// fit — silently, which the spec explicitly forbids. Rather than measure
-// rendered height, we cap input at levels verified (by test render) to
-// stay within one A4 page at the compact type sizes used in the PDF
-// templates, and surface the same message the spec requires wherever the
-// budget is exceeded.
-// Re-verified by test render after the Creator's Social Media Accounts
-// strip and full Address field were added to this document's meta block
-// and body — both take real vertical space, so the joint worst case
-// (max services + max terms + all three social handles + a long postal
-// address) had to be re-measured, not just the terms/services caps in
-// isolation. Re-measured again after the Creator's Social Media Accounts
-// strip became a full Platform/Username/Commission table (matching the
-// Commercial Terms table styling) — a table costs more vertical space
-// than the compact strip it replaced, so the terms budget dropped.
-export const ONE_PAGE_LIMITS = {
-  creatorServices: 4,
-  creatorTermsChars: 650,
-  brandDeliverables: 8,
-  brandExtraPricingItems: 4,
-};
-
-export const ONE_PAGE_WARNING =
-  "Commercial details exceed the one-page layout. Please reduce content or use a separate detailed schedule.";
-
-export function creatorManagementExceedsOnePage(details: CreatorManagementDetails): boolean {
-  return (
-    details.additionalServices.length > ONE_PAGE_LIMITS.creatorServices ||
-    details.terms.length > ONE_PAGE_LIMITS.creatorTermsChars
-  );
-}
-
-export function brandCollaborationExceedsOnePage(details: BrandCollaborationDetails): boolean {
-  return (
-    details.deliverables.length > ONE_PAGE_LIMITS.brandDeliverables ||
-    details.extraPricingItems.length > ONE_PAGE_LIMITS.brandExtraPricingItems
-  );
-}
+// --- Multi-page documents -------------------------------------------------
+// These two structured agreement types used to be capped at one A4 page
+// (an explicit character/row-count guard blocked saving beyond it). The
+// cap has been removed: additional services, deliverables, pricing items
+// and — most importantly — unlimited custom sections (see
+// `customSections` above) are now free to flow onto Page 2, 3, etc.
+// react-pdf already repeats the letterhead header/footer/watermark on
+// every physical page automatically (they're `fixed` inside one
+// `<Page>` in src/lib/pdf/Letterhead.tsx), so no new pagination code is
+// needed — only the artificial one-page limit had to go.

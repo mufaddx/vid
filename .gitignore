@@ -48,3 +48,8 @@ scripts/shot-*.png
 
 # Claude Code session artifacts
 .claude/
+
+# Stray file some Windows-shell commands accidentally create at repo root
+# when a null-output redirect resolves to a literal "nul" instead of the
+# actual null device — harmless, just keep it out of git.
+/nul

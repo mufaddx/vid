@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { newSectionId, type AgreementSection } from "@/lib/agreement-content";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,10 +18,7 @@ import {
 import { createBrandCollaborationAgreementAction, updateBrandCollaborationDetailsAction } from "@/server/actions/structured-agreements";
 import {
   emptyBrandCollaborationDetails,
-  brandCollaborationExceedsOnePage,
   computeBrandCollaborationTotals,
-  ONE_PAGE_WARNING,
-  ONE_PAGE_LIMITS,
   DELIVERABLE_TYPES,
   AD_PLATFORMS,
   AUTHORIZATION_STATUSES,
@@ -40,9 +38,10 @@ import {
   PreviewMetaRow,
   PreviewSectionHeading,
   PreviewTable,
+  PreviewCustomSections,
   PreviewSignatureRow,
 } from "@/components/admin/agreement/preview-shell";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 
 function newDeliverable(): Deliverable {
   return { id: Math.random().toString(36).slice(2, 9), type: "INSTAGRAM_REEL", quantity: 1, rate: 0 };
@@ -92,7 +91,6 @@ export function BrandCollaborationForm({
   const creatorName = creators.find((c) => c.id === creatorId)?.name ?? "Creator";
   const brandName = brands.find((b) => b.id === brandId)?.name ?? "Brand";
 
-  const exceedsOnePage = useMemo(() => brandCollaborationExceedsOnePage(details), [details]);
   const totals = useMemo(() => computeBrandCollaborationTotals(details), [details]);
   const visibleCampaigns = campaigns.filter((c) => c.brandId === brandId);
 
@@ -105,13 +103,37 @@ export function BrandCollaborationForm({
   function updateAd(id: string, patch: Partial<BrandCollaborationDetails["advertising"][number]>) {
     setDetails((d) => ({ ...d, advertising: d.advertising.map((a) => (a.id === id ? { ...a, ...patch } : a)) }));
   }
+  function addCustomSection() {
+    setDetails((d) => ({
+      ...d,
+      customSections: [...d.customSections, { id: newSectionId(), heading: "New Section", body: "" }],
+    }));
+  }
+  function updateCustomSection(id: string, patch: Partial<AgreementSection>) {
+    setDetails((d) => ({
+      ...d,
+      customSections: d.customSections.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+    }));
+  }
+  function removeCustomSection(id: string) {
+    setDetails((d) => ({ ...d, customSections: d.customSections.filter((s) => s.id !== id) }));
+  }
+  function moveCustomSection(id: string, dir: -1 | 1) {
+    setDetails((d) => {
+      const i = d.customSections.findIndex((s) => s.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= d.customSections.length) return d;
+      const next = [...d.customSections];
+      [next[i], next[j]] = [next[j], next[i]];
+      return { ...d, customSections: next };
+    });
+  }
 
   async function handleSubmit() {
     setError(undefined);
     setSaved(false);
     if (!creatorId) return setError("Select a creator.");
     if (!brandId) return setError("Select a brand.");
-    if (exceedsOnePage) return setError(ONE_PAGE_WARNING);
     setPending(true);
     const res = editAgreementId
       ? await updateBrandCollaborationDetailsAction(editAgreementId, details)
@@ -224,7 +246,6 @@ export function BrandCollaborationForm({
             type="button"
             size="sm"
             variant="outline"
-            disabled={details.deliverables.length >= ONE_PAGE_LIMITS.brandDeliverables}
             onClick={() => setDetails((d) => ({ ...d, deliverables: [...d.deliverables, newDeliverable()] }))}
           >
             <Plus className="size-4" /> Add Deliverable
@@ -323,7 +344,6 @@ export function BrandCollaborationForm({
             type="button"
             size="sm"
             variant="outline"
-            disabled={details.extraPricingItems.length >= ONE_PAGE_LIMITS.brandExtraPricingItems}
             onClick={() => setDetails((d) => ({ ...d, extraPricingItems: [...d.extraPricingItems, newPricingItem()] }))}
           >
             <Plus className="size-4" /> Add Item
@@ -402,9 +422,54 @@ export function BrandCollaborationForm({
         <Textarea rows={2} value={details.paymentTerms} onChange={(e) => setDetails((d) => ({ ...d, paymentTerms: e.target.value }))} />
       </div>
 
-      {exceedsOnePage ? (
-        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">{ONE_PAGE_WARNING}</p>
-      ) : null}
+      <div className="rounded-xl border border-neutral-200 bg-white p-4">
+        <div className="flex items-center justify-between mb-3">
+          <Label>Custom Sections</Label>
+          <Button type="button" size="sm" variant="outline" onClick={addCustomSection}>
+            <Plus className="size-4" /> Add Section
+          </Button>
+        </div>
+        {details.customSections.length === 0 ? (
+          <p className="text-sm text-neutral-400">
+            Add any additional sections — Content Usage Rights, Termination Conditions,
+            Confidentiality, etc. — with a custom heading and content. Unlimited sections; the
+            document flows onto additional pages automatically.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {details.customSections.map((s, i) => (
+              <div key={s.id} className="rounded-lg border border-neutral-100 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    className="font-medium"
+                    placeholder="Section Heading"
+                    value={s.heading}
+                    onChange={(e) => updateCustomSection(s.id, { heading: e.target.value })}
+                  />
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <Button type="button" variant="ghost" size="icon" disabled={i === 0} onClick={() => moveCustomSection(s.id, -1)}>
+                      <ChevronUp className="size-4 text-neutral-400" />
+                    </Button>
+                    <Button type="button" variant="ghost" size="icon" disabled={i === details.customSections.length - 1} onClick={() => moveCustomSection(s.id, 1)}>
+                      <ChevronDown className="size-4 text-neutral-400" />
+                    </Button>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeCustomSection(s.id)}>
+                      <Trash2 className="size-4 text-neutral-400" />
+                    </Button>
+                  </div>
+                </div>
+                <Textarea
+                  rows={3}
+                  placeholder="Section content…"
+                  value={s.body}
+                  onChange={(e) => updateCustomSection(s.id, { body: e.target.value })}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       {saved ? <p className="text-sm text-emerald-600">Saved.</p> : null}
 
@@ -485,6 +550,15 @@ export function BrandCollaborationForm({
               </div>
             </>
           ) : null}
+
+          {details.paymentTerms.trim() ? (
+            <>
+              <PreviewSectionHeading>Payment Terms</PreviewSectionHeading>
+              <p className="text-[9px] text-neutral-700 text-justify leading-relaxed mb-1.5">{details.paymentTerms.trim()}</p>
+            </>
+          ) : null}
+
+          <PreviewCustomSections sections={details.customSections} />
 
           <PreviewSignatureRow signers={["Brand Authorized Representative", "VIDLIX Authorized Representative", `Creator — ${creatorName}`]} />
         </AgreementPreviewFrame>

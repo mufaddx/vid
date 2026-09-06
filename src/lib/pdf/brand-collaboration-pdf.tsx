@@ -7,6 +7,7 @@ import {
   StructuredMetaRow,
   SectionLabel,
   StructuredParagraph,
+  StructuredCustomSections,
   DataTable,
   StructuredTotals,
   StructuredSignatureRow,
@@ -130,6 +131,8 @@ function BrandCollaborationDocument({ input }: { input: BrandCollaborationPdfInp
             <StructuredParagraph>{details.paymentTerms}</StructuredParagraph>
           </>
         ) : null}
+
+        <StructuredCustomSections sections={details.customSections ?? []} />
 
         <StructuredSignatureRow
           signers={[

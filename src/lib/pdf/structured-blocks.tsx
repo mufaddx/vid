@@ -1,6 +1,7 @@
 import { View, StyleSheet } from "@react-pdf/renderer";
 import { Text } from "./Text";
 import { pdfTheme } from "@/lib/pdf/theme";
+import type { AgreementSection } from "@/lib/agreement-content";
 
 // Compact building blocks shared by the two structured, single-page
 // agreement PDFs (Creator Management / Brand Collaboration). Deliberately
@@ -172,6 +173,33 @@ export function InfoStrip({ label, items }: { label: string; items: string[] }) 
 
 export function StructuredParagraph({ children }: { children: string }) {
   return <Text style={styles.paragraph}>{children}</Text>;
+}
+
+/** Unlimited custom heading+body sections, styled to match this document's
+ * compact type (see SectionLabel/paragraph above). A lone "---" paragraph
+ * forces a page break — the letterhead header/footer/watermark repeat on
+ * every physical page automatically (they're `fixed` in LetterheadPage),
+ * so no extra pagination logic is needed here. */
+export function StructuredCustomSections({ sections }: { sections: AgreementSection[] }) {
+  return (
+    <>
+      {sections.map((section) => {
+        const paragraphs = section.body.split("\n\n").filter((p) => p.trim().length > 0);
+        return (
+          <View key={section.id} wrap>
+            {section.heading ? <Text style={styles.sectionLabel}>{section.heading.toUpperCase()}</Text> : null}
+            {paragraphs.map((para, i) =>
+              para.trim() === "---" ? (
+                <View key={i} break />
+              ) : (
+                <Text key={i} style={styles.paragraph}>{para.trim()}</Text>
+              ),
+            )}
+          </View>
+        );
+      })}
+    </>
+  );
 }
 
 export function DataTable({

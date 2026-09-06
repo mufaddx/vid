@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDate } from "@/lib/format";
-import { FileSignature, Plus } from "lucide-react";
+import { FileSignature } from "lucide-react";
 import type { AgreementType } from "@prisma/client";
+import { NewAgreementDialog } from "@/components/admin/agreement/new-agreement-dialog";
 
 const TYPE_FILTERS: { value: AgreementType | "ALL"; label: string }[] = [
   { value: "ALL", label: "All" },
@@ -17,21 +18,26 @@ const TYPE_FILTERS: { value: AgreementType | "ALL"; label: string }[] = [
 ];
 
 export default async function AgreementsListPage() {
-  const agreements = await prisma.agreement.findMany({
-    include: { creator: true, brand: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [agreements, creators, brands, campaigns, templates] = await Promise.all([
+    prisma.agreement.findMany({
+      include: { creator: true, brand: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.creator.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.campaign.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, brandId: true } }),
+    prisma.agreementTemplate.findMany({
+      where: { status: "ACTIVE", type: { notIn: ["CREATOR_MANAGEMENT", "BRAND_COLLABORATION"] } },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   return (
     <div>
       <PageHeader
         title="Agreements"
         description={`${agreements.length} agreement${agreements.length === 1 ? "" : "s"}`}
-        actions={
-          <Button asChild>
-            <Link href="/admin/agreements/new"><Plus className="size-4" /> New Agreement</Link>
-          </Button>
-        }
+        actions={<NewAgreementDialog creators={creators} brands={brands} campaigns={campaigns} templates={templates} />}
       />
       <div className="p-8">
         {agreements.length === 0 ? (

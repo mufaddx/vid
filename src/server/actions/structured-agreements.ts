@@ -17,9 +17,6 @@ import { renderBrandCollaborationPdf } from "@/lib/pdf/brand-collaboration-pdf";
 import {
   type CreatorManagementDetails,
   type BrandCollaborationDetails,
-  creatorManagementExceedsOnePage,
-  brandCollaborationExceedsOnePage,
-  ONE_PAGE_WARNING,
 } from "@/lib/agreement-details";
 
 export type ActionResult = { ok: true; agreementId: string } | { ok: false; error: string };
@@ -45,10 +42,6 @@ export async function createCreatorManagementAgreementAction(input: {
   const parsed = creatorManagementSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input." };
   const { creatorId, commissionPercentage, details } = parsed.data;
-
-  if (creatorManagementExceedsOnePage(details)) {
-    return { ok: false, error: ONE_PAGE_WARNING };
-  }
 
   const [creator, company] = await Promise.all([
     prisma.creator.findUnique({ where: { id: creatorId } }),
@@ -92,10 +85,6 @@ export async function updateCreatorManagementDetailsAction(
   const session = await getSession();
   if (!session) return { ok: false, error: "Not authorized." };
 
-  if (creatorManagementExceedsOnePage(input.details)) {
-    return { ok: false, error: ONE_PAGE_WARNING };
-  }
-
   const agreement = await prisma.agreement.findUnique({ where: { id: agreementId } });
   if (!agreement) return { ok: false, error: "Agreement not found." };
   if (agreement.status !== "DRAFT") return { ok: false, error: "Only draft agreements can be edited." };
@@ -138,10 +127,6 @@ export async function createBrandCollaborationAgreementAction(input: {
   const parsed = brandCollaborationSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input." };
   const { creatorId, brandId, campaignId, details } = parsed.data;
-
-  if (brandCollaborationExceedsOnePage(details)) {
-    return { ok: false, error: ONE_PAGE_WARNING };
-  }
 
   const [creator, brand, company] = await Promise.all([
     prisma.creator.findUnique({ where: { id: creatorId } }),
@@ -187,10 +172,6 @@ export async function updateBrandCollaborationDetailsAction(
 ): Promise<ActionResult> {
   const session = await getSession();
   if (!session) return { ok: false, error: "Not authorized." };
-
-  if (brandCollaborationExceedsOnePage(details)) {
-    return { ok: false, error: ONE_PAGE_WARNING };
-  }
 
   const agreement = await prisma.agreement.findUnique({ where: { id: agreementId } });
   if (!agreement) return { ok: false, error: "Agreement not found." };

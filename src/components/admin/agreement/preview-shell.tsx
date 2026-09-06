@@ -170,6 +170,31 @@ export function PreviewTable({
   );
 }
 
+// Renders an unlimited list of fully custom heading+body sections (see
+// AgreementSection in src/lib/agreement-content.ts) — used by both the
+// legacy free-text editor and the two structured agreement forms' "+ Add
+// Section" feature. A lone "---" paragraph forces a page break in the PDF
+// (see SectionBlocks in src/lib/pdf/blocks.tsx) and is simply skipped here
+// since the live preview scrolls as one continuous document.
+export function PreviewCustomSections({ sections }: { sections: { id: string; heading: string; body: string }[] }) {
+  return (
+    <>
+      {sections.map((s) => (
+        <div key={s.id}>
+          {s.heading ? <PreviewSectionHeading>{s.heading}</PreviewSectionHeading> : null}
+          {s.body
+            .split("\n\n")
+            .map((p) => p.trim())
+            .filter((p) => p && p !== "---")
+            .map((para, i) => (
+              <p key={i} className="text-[9px] text-neutral-700 text-justify leading-relaxed mb-1.5">{para}</p>
+            ))}
+        </div>
+      ))}
+    </>
+  );
+}
+
 export function PreviewSignatureRow({ signers }: { signers: string[] }) {
   return (
     <div className="flex gap-2 mt-6">

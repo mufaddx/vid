@@ -6,6 +6,7 @@ import {
   StructuredMetaRow,
   SectionLabel,
   StructuredParagraph,
+  StructuredCustomSections,
   DataTable,
   StructuredSignatureRow,
 } from "@/lib/pdf/structured-blocks";
@@ -120,6 +121,8 @@ function CreatorManagementDocument({ input }: { input: CreatorManagementPdfInput
 
         <SectionLabel>Management Terms</SectionLabel>
         <StructuredParagraph>{details.terms}</StructuredParagraph>
+
+        <StructuredCustomSections sections={details.customSections ?? []} />
 
         <StructuredSignatureRow
           signers={[
