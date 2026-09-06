@@ -12,6 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { VidlixWordmark } from "@/components/vidlix-wordmark";
+// Forcing dynamic rendering for this page lives in the new
+// admin/login/layout.tsx — a route segment config export needs a Server
+// Component to reliably take effect, and this page is "use client".
 
 export default function AdminLoginPage() {
   const [state, formAction, pending] = useActionState<LoginState, FormData>(

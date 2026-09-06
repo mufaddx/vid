@@ -3,6 +3,24 @@ import { SiteHeader } from "@/components/public/site-header";
 import { SiteFooter } from "@/components/public/site-footer";
 import type { CompanySettings, FooterLink } from "@prisma/client";
 
+// Forces every page under this layout to be server-rendered per request
+// instead of statically prerendered at build time. Root cause of the
+// recurring "page loads unstyled, but clicking any link fixes it" bug:
+// several routes here (/, /legal, /about, /faq, ...) had no
+// Request-time API forcing dynamic rendering, so Next statically
+// prerendered them and served that cached HTML on every hit
+// (`x-nextjs-cache: HIT`, confirmed via response headers) — with each
+// new deploy renaming hashed JS/CSS chunk files, a stale cached snapshot
+// referencing a previous deploy's assets could keep being served past
+// the deploy that replaced them. Clicking a link "fixed" it because
+// client-side navigation re-renders with the currently-loaded (correct)
+// JS bundle, bypassing the stale server HTML entirely. Every route that
+// was already dynamic (e.g. /blog, /creators) never showed this bug —
+// this makes the whole public site behave the same way: a small,
+// acceptable per-request DB cost in exchange for this bug being
+// structurally impossible from here on.
+export const dynamic = "force-dynamic";
+
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   // `.dark` activates the theme tokens (see globals.css) that every themed
   // component on this site — Button included — reads its colors from.
