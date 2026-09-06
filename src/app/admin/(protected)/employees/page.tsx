@@ -49,7 +49,7 @@ export default async function EmployeesPage() {
                     <TableCell className="text-xs text-neutral-500">{e.lastLoginAt ? formatDate(e.lastLoginAt) : "Never"}</TableCell>
                     <TableCell><StatusBadge status={e.active ? "ACTIVE" : "INACTIVE"} /></TableCell>
                     <TableCell className="text-right">
-                      <EmployeeStatusToggle employeeId={e.id} active={e.active} isSelf={e.id === session?.id} />
+                      <EmployeeStatusToggle employeeId={e.id} employeeName={e.name} active={e.active} isSelf={e.id === session?.id} />
                     </TableCell>
                   </TableRow>
                 ))}

@@ -13,11 +13,11 @@ async function main() {
   await adminLogin(page, { base: BASE });
   log("login OK");
 
-  // --- Logout is now in the top header, not the sidebar bottom ---
+  // --- Logout lives in the sidebar bottom, not the top header ---
   await page.goto(`${BASE}/admin/dashboard`);
-  const headerLogoutVisible = (await page.locator('div:has(> span:has-text("VIDLIX Admin Panel")) button:has-text("Logout")').count()) > 0;
-  const sidebarSignOutGone = (await page.locator('aside button:has-text("Sign out")').count()) === 0;
-  log("Logout button in top header:", headerLogoutVisible, "| old sidebar Sign out removed:", sidebarSignOutGone);
+  const sidebarLogoutVisible = (await page.locator('aside button:has-text("Logout")').count()) > 0;
+  const headerLogoutGone = (await page.locator('div:has(> span:has-text("VIDLIX Admin Panel")) button:has-text("Logout")').count()) === 0;
+  log("Logout button in sidebar:", sidebarLogoutVisible, "| top header Logout removed:", headerLogoutGone);
 
   // --- Settings tab content is centered (has mx-auto, not flush left) ---
   await page.goto(`${BASE}/admin/settings`);
@@ -58,7 +58,7 @@ async function main() {
   await browser.close();
   await prisma.$disconnect();
 
-  const ok = headerLogoutVisible && sidebarSignOutGone && centeredWithinTolerance && !!emailLog;
+  const ok = sidebarLogoutVisible && headerLogoutGone && centeredWithinTolerance && !!emailLog;
   log(ok ? "ALL CHECKS PASSED ✔" : "SOME CHECKS FAILED ✘");
   if (!ok) process.exit(1);
 }
