@@ -132,7 +132,9 @@ export async function POST(request: Request): Promise<Response> {
 
   await prisma.emailThread.update({
     where: { id: thread.id },
-    data: { lastMessageAt: new Date(), status: "OPEN" },
+    // Re-flag unread even on an already-read thread — a fresh inbound
+    // message means there's something new to see again.
+    data: { lastMessageAt: new Date(), status: "OPEN", unread: true },
   });
 
   console.log(`[inbound-email] stored message ${message_id} from ${from} into thread ${thread.id}`);

@@ -48,7 +48,13 @@ const NAV: { href: string; label: string; icon: typeof LayoutDashboard; module: 
   { href: "/admin/settings", label: "Settings", icon: Settings, module: "settings" },
 ];
 
-export function AdminSidebar({ admin }: { admin: SessionAdmin }) {
+export function AdminSidebar({
+  admin,
+  badges,
+}: {
+  admin: SessionAdmin;
+  badges?: Record<string, number>;
+}) {
   const pathname = usePathname();
   const visibleNav = NAV.filter((item) => hasPermission(admin.role, item.module));
 
@@ -62,6 +68,7 @@ export function AdminSidebar({ admin }: { admin: SessionAdmin }) {
         {visibleNav.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
+          const badgeCount = badges?.[item.href] ?? 0;
           return (
             <Link
               key={item.href}
@@ -74,7 +81,12 @@ export function AdminSidebar({ admin }: { admin: SessionAdmin }) {
               )}
             >
               <Icon className="size-4" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {badgeCount > 0 ? (
+                <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-violet-500 text-[11px] font-semibold text-white">
+                  {badgeCount > 99 ? "99+" : badgeCount}
+                </span>
+              ) : null}
             </Link>
           );
         })}

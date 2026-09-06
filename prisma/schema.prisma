@@ -477,6 +477,10 @@ model Inquiry {
   creator     Creator?      @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   brandId     String?
   brand       Brand?        @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  // Set the first time an admin opens the detail view — badges the
+  // sidebar's "new inquiry" count and lets a status change notify the
+  // submitter (it's assumed someone actually looked at it by then).
+  viewedAt    DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -805,6 +809,16 @@ model EmailThread {
   subject               String
   status                ThreadStatus @default(OPEN)
   starred               Boolean      @default(false)
+  // True whenever the thread has a message an admin hasn't opened it to
+  // see yet — set true on creation and on every fresh inbound message,
+  // cleared the moment the thread's detail page is opened. Powers the
+  // sidebar's Inbox badge.
+  unread                Boolean      @default(true)
+  // A friendly display name for the external party on this thread (the
+  // person's own name almost never appears in a bare email address) —
+  // set once by an admin, shown instead of/alongside the raw address
+  // everywhere this thread appears.
+  contactName           String?
   lastMessageAt         DateTime     @default(now())
   createdAt             DateTime     @default(now())
 

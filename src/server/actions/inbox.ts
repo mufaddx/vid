@@ -107,6 +107,9 @@ export async function sendComposeEmailAction(formData: FormData): Promise<void> 
       creatorEmailAccountId: account.id,
       subject: data.subject,
       lastMessageAt: new Date(),
+      // Admin-initiated — nothing new for an admin to "read" here, so it
+      // shouldn't count toward the sidebar's unread badge.
+      unread: false,
       messages: {
         create: {
           fromEmail: account.emailAddress,
@@ -131,4 +134,18 @@ export async function sendComposeEmailAction(formData: FormData): Promise<void> 
 
   revalidatePath("/admin/inbox");
   redirect(`/admin/inbox/${thread.id}`);
+}
+
+export async function updateThreadContactNameAction(threadId: string, formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/admin/login");
+
+  const contactName = String(formData.get("contactName") || "").trim();
+  await prisma.emailThread.update({
+    where: { id: threadId },
+    data: { contactName: contactName || null },
+  });
+
+  revalidatePath("/admin/inbox");
+  revalidatePath(`/admin/inbox/${threadId}`);
 }

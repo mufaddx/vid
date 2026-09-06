@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/send";
-import { creatorInquiryConfirmationEmail, brandInquiryConfirmationEmail } from "@/lib/email/templates";
+import { creatorInquiryConfirmationEmail, brandInquiryConfirmationEmail, inquiryStatusUpdateEmail } from "@/lib/email/templates";
 import { logActivity } from "@/lib/activity";
 
 const creatorInquirySchema = z.object({
@@ -103,6 +103,38 @@ export async function updateInquiryStatusAction(id: string, formData: FormData):
   if (!session) redirect("/admin/login");
 
   const status = String(formData.get("status"));
-  await prisma.inquiry.update({ where: { id }, data: { status: status as never } });
+  const inquiry = await prisma.inquiry.update({ where: { id }, data: { status: status as never } });
+
+  // Let the submitter know something happened on their inquiry — they
+  // have no other way to find out. Skipped for NEW (that's the starting
+  // state, not a change worth emailing about) and when there's no email
+  // on file at all.
+  if (inquiry.email && status !== "NEW") {
+    await sendEmail({
+      to: inquiry.email,
+      subject: "VIDLIX — An update on your inquiry",
+      html: inquiryStatusUpdateEmail({ name: inquiry.fullName || inquiry.brandName || "there", status }),
+      template: "inquiry_status_update",
+    });
+  }
+
+  await logActivity({
+    actorId: session.id,
+    action: `Inquiry status changed to ${status.replaceAll("_", " ")}`,
+    entityType: "Inquiry",
+    entityId: id,
+  });
+
+  revalidatePath("/admin/inquiries");
+}
+
+export async function markInquiryViewedAction(id: string): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/admin/login");
+
+  await prisma.inquiry.update({
+    where: { id },
+    data: { viewedAt: new Date() },
+  });
   revalidatePath("/admin/inquiries");
 }

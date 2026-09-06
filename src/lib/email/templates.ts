@@ -37,6 +37,28 @@ export function brandInquiryConfirmationEmail(contactPerson: string, brandName: 
   `);
 }
 
+const INQUIRY_STATUS_COPY: Record<string, string> = {
+  NEW: "received and is in our queue",
+  UNDER_REVIEW: "now under review by our team",
+  CONTACTED: "moved forward — our team has reached out to you",
+  QUALIFIED: "qualified and progressing to the next step",
+  APPROVED: "approved",
+  REJECTED: "reviewed, and unfortunately we won't be moving forward with it at this time",
+  ONBOARDED: "approved — you've been onboarded",
+  CONVERTED: "converted into an active collaboration",
+  CLOSED: "closed",
+};
+
+export function inquiryStatusUpdateEmail(opts: { name: string; status: string }): string {
+  const statusCopy = INQUIRY_STATUS_COPY[opts.status] ?? "updated";
+  return wrapper(`
+    <p>Hello ${opts.name},</p>
+    <p>An update on your inquiry with VIDLIX — it has been ${statusCopy}.</p>
+    <p>If you have any questions, just reply to this email.</p>
+    <p>Regards,<br/>VIDLIX</p>
+  `);
+}
+
 export function agreementReadyEmail(opts: {
   creatorName: string;
   agreementNumber: string;
