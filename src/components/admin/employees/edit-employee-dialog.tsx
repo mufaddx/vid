@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createEmployeeAction, type EmployeeFormState } from "@/server/actions/employees";
+import { updateEmployeeAction, type EmployeeFormState } from "@/server/actions/employees";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ManagedCreatorsPicker } from "@/components/admin/employees/managed-creators-picker";
-import { Plus } from "lucide-react";
+import { Pencil } from "lucide-react";
 
 const ROLE_OPTIONS: { value: string; label: string }[] = [
   { value: "TALENT_MANAGER", label: "Talent Manager — Creators & Agreements" },
@@ -35,14 +35,28 @@ const ROLE_OPTIONS: { value: string; label: string }[] = [
 const CREATOR_SCOPED_ROLES = new Set(["TALENT_MANAGER", "CAMPAIGN_MANAGER"]);
 
 type Creator = { id: string; name: string; profileImage: string | null };
+type Employee = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  designation: string | null;
+  role: string;
+};
 
-export function AddEmployeeDialog({ creators }: { creators: Creator[] }) {
+export function EditEmployeeDialog({
+  employee,
+  creators,
+  managedCreatorIds,
+}: {
+  employee: Employee;
+  creators: Creator[];
+  managedCreatorIds: string[];
+}) {
   const [open, setOpen] = useState(false);
-  const [role, setRole] = useState("VIEWER");
-  const [state, formAction, pending] = useActionState<EmployeeFormState, FormData>(
-    createEmployeeAction,
-    undefined,
-  );
+  const [role, setRole] = useState(employee.role);
+  const action = updateEmployeeAction.bind(null, employee.id);
+  const [state, formAction, pending] = useActionState<EmployeeFormState, FormData>(action, undefined);
   const router = useRouter();
 
   useEffect(() => {
@@ -55,31 +69,31 @@ export function AddEmployeeDialog({ creators }: { creators: Creator[] }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="size-4" /> Add Employee
+        <Button variant="ghost" size="sm">
+          <Pencil className="size-3.5" /> Edit
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Employee</DialogTitle>
+          <DialogTitle>Edit {employee.name}</DialogTitle>
         </DialogHeader>
         <form action={formAction} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Full Name *</Label>
-              <Input id="name" name="name" required />
+              <Label htmlFor="edit-name">Full Name *</Label>
+              <Input id="edit-name" name="name" defaultValue={employee.name} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email *</Label>
-              <Input id="email" name="email" type="email" required />
+              <Label htmlFor="edit-email">Email *</Label>
+              <Input id="edit-email" name="email" type="email" defaultValue={employee.email} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" name="phone" />
+              <Label htmlFor="edit-phone">Phone</Label>
+              <Input id="edit-phone" name="phone" defaultValue={employee.phone ?? ""} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="designation">Designation</Label>
-              <Input id="designation" name="designation" placeholder="Talent Manager" />
+              <Label htmlFor="edit-designation">Designation</Label>
+              <Input id="edit-designation" name="designation" defaultValue={employee.designation ?? ""} />
             </div>
           </div>
 
@@ -93,31 +107,20 @@ export function AddEmployeeDialog({ creators }: { creators: Creator[] }) {
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-neutral-400">
-              Determines which admin panel sections this employee can see and use.
-            </p>
           </div>
 
           {CREATOR_SCOPED_ROLES.has(role) ? (
             <div className="space-y-1.5">
               <Label>Managed Creators</Label>
-              <ManagedCreatorsPicker name="managedCreatorIds" creators={creators} />
+              <ManagedCreatorsPicker name="managedCreatorIds" creators={creators} defaultSelected={managedCreatorIds} />
             </div>
           ) : null}
-
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Temporary Password *</Label>
-            <Input id="password" name="password" type="text" minLength={8} required placeholder="At least 8 characters" />
-            <p className="text-xs text-neutral-400">
-              Share this with the employee — they log in the same way as any admin, at /admin/login.
-            </p>
-          </div>
 
           {state?.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={pending}>{pending ? "Creating…" : "Create Employee"}</Button>
+            <Button type="submit" disabled={pending}>{pending ? "Saving…" : "Save Changes"}</Button>
           </div>
         </form>
       </DialogContent>

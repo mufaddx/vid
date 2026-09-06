@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getSession } from "@/lib/auth";
+import { getManagedCreatorIds, creatorScopeWhere } from "@/lib/creator-scope";
 
 export default async function NewAgreementPage({
   searchParams,
@@ -18,6 +20,8 @@ export default async function NewAgreementPage({
   searchParams: Promise<{ creatorId?: string; brandId?: string }>;
 }) {
   const { creatorId, brandId } = await searchParams;
+  const session = await getSession();
+  const scope = session ? await getManagedCreatorIds(session) : "ALL";
 
   const [templates, creators, brands, campaigns] = await Promise.all([
     // Creator Management and Brand Collaboration now have dedicated
@@ -26,7 +30,7 @@ export default async function NewAgreementPage({
     prisma.agreementTemplate.findMany({
       where: { status: "ACTIVE", type: { notIn: ["CREATOR_MANAGEMENT", "BRAND_COLLABORATION"] } },
     }),
-    prisma.creator.findMany({ orderBy: { name: "asc" } }),
+    prisma.creator.findMany({ where: creatorScopeWhere(scope), orderBy: { name: "asc" } }),
     prisma.brand.findMany({ orderBy: { name: "asc" } }),
     prisma.campaign.findMany({ orderBy: { name: "asc" } }),
   ]);

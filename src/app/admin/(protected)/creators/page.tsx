@@ -10,9 +10,14 @@ import { computeTotalAudience } from "@/lib/audience";
 import { formatCompactNumber } from "@/lib/format";
 import { Users } from "lucide-react";
 import { AddCreatorDialog } from "@/components/admin/creators/add-creator-dialog";
+import { getSession } from "@/lib/auth";
+import { getManagedCreatorIds, creatorScopeWhere } from "@/lib/creator-scope";
 
 export default async function AdminCreatorsPage() {
+  const session = await getSession();
+  const scope = session ? await getManagedCreatorIds(session) : "ALL";
   const creators = await prisma.creator.findMany({
+    where: creatorScopeWhere(scope),
     orderBy: { createdAt: "desc" },
     include: { socialAccounts: { include: { metric: true } } },
   });

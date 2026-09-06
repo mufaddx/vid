@@ -45,6 +45,7 @@ model AdminUser {
   activityLogs      ActivityLog[]
   sessions          AdminSession[]
   loginOtps         AdminLoginOtp[]
+  managedCreators   EmployeeManagedCreator[]
 
   @@map("admin_users")
 }
@@ -227,8 +228,24 @@ model Creator {
   activityLogs      ActivityLog[]
   audienceSnapshots CreatorAudienceSnapshot[]
   inquiries         Inquiry[]
+  managedBy         EmployeeManagedCreator[]
 
   @@map("creators")
+}
+
+// Explicit join for per-employee creator scoping (spec: a manager-role
+// employee assigned specific creators can only manage those, until at
+// least one is assigned they're unrestricted — see src/lib/creator-scope.ts).
+model EmployeeManagedCreator {
+  id          String    @id @default(cuid())
+  adminUserId String
+  admin       AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  creatorId   String
+  creator     Creator   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([adminUserId, creatorId])
+  @@map("employee_managed_creators")
 }
 
 model CreatorJourneyEntry {

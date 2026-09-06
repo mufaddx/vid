@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/page-header";
 import { CreatorManagementForm } from "@/components/admin/agreement/creator-management-form";
 import { deriveSocialHandles, type CreatorSocialHandles } from "@/lib/agreement-details";
+import { getSession } from "@/lib/auth";
+import { getManagedCreatorIds, creatorScopeWhere } from "@/lib/creator-scope";
 
 export default async function NewCreatorManagementAgreementPage({
   searchParams,
@@ -9,9 +11,12 @@ export default async function NewCreatorManagementAgreementPage({
   searchParams: Promise<{ creatorId?: string }>;
 }) {
   const { creatorId } = await searchParams;
+  const session = await getSession();
+  const scope = session ? await getManagedCreatorIds(session) : "ALL";
 
   const [creators, company] = await Promise.all([
     prisma.creator.findMany({
+      where: creatorScopeWhere(scope),
       orderBy: { name: "asc" },
       select: {
         id: true,

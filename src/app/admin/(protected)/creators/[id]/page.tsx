@@ -15,6 +15,8 @@ import { markPayoutPaidAction } from "@/server/actions/billing";
 import { computeTotalAudience } from "@/lib/audience";
 import { formatCompactNumber, formatDate, formatINR, timeAgo } from "@/lib/format";
 import { FileSignature, Receipt, Mail, FolderOpen, Activity as ActivityIcon, Handshake } from "lucide-react";
+import { getSession } from "@/lib/auth";
+import { getManagedCreatorIds } from "@/lib/creator-scope";
 
 export default async function CreatorDetailPage({
   params,
@@ -31,6 +33,15 @@ export default async function CreatorDetailPage({
     },
   });
   if (!creator) notFound();
+
+  // Closes the direct-URL bypass: the list page above already filters by
+  // assigned creators, but a manager-role employee could otherwise still
+  // open any creator's detail page by guessing/pasting its id.
+  const session = await getSession();
+  if (session) {
+    const scope = await getManagedCreatorIds(session);
+    if (scope !== "ALL" && !scope.includes(id)) notFound();
+  }
 
   const [agreements, invoices, payouts, collaborations, documents, activityLogs] = await Promise.all([
     prisma.agreement.findMany({ where: { creatorId: id }, include: { brand: true, campaign: true }, orderBy: { createdAt: "desc" } }),

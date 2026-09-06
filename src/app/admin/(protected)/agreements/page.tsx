@@ -10,6 +10,8 @@ import { formatDate } from "@/lib/format";
 import { FileSignature } from "lucide-react";
 import type { AgreementType } from "@prisma/client";
 import { NewAgreementDialog } from "@/components/admin/agreement/new-agreement-dialog";
+import { getSession } from "@/lib/auth";
+import { getManagedCreatorIds, creatorScopeWhere } from "@/lib/creator-scope";
 
 const TYPE_FILTERS: { value: AgreementType | "ALL"; label: string }[] = [
   { value: "ALL", label: "All" },
@@ -18,12 +20,16 @@ const TYPE_FILTERS: { value: AgreementType | "ALL"; label: string }[] = [
 ];
 
 export default async function AgreementsListPage() {
+  const session = await getSession();
+  const scope = session ? await getManagedCreatorIds(session) : "ALL";
+
   const [agreements, creators, brands, campaigns, templates] = await Promise.all([
     prisma.agreement.findMany({
+      where: scope === "ALL" ? {} : { creatorId: { in: scope } },
       include: { creator: true, brand: true },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.creator.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.creator.findMany({ where: creatorScopeWhere(scope), orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.campaign.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, brandId: true } }),
     prisma.agreementTemplate.findMany({

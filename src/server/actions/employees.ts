@@ -38,6 +38,10 @@ export async function createEmployeeAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
   const data = parsed.data;
+  // A repeated hidden input per selection (see ManagedCreatorsPicker) —
+  // Object.fromEntries above would only keep the last one, so this has
+  // to be read separately via getAll.
+  const managedCreatorIds = formData.getAll("managedCreatorIds").map(String).filter(Boolean);
 
   const existing = await prisma.adminUser.findUnique({ where: { email: data.email } });
   if (existing) {
@@ -54,6 +58,9 @@ export async function createEmployeeAction(
       designation: data.designation || undefined,
       role: data.role,
       passwordHash,
+      managedCreators: managedCreatorIds.length
+        ? { create: managedCreatorIds.map((creatorId) => ({ creatorId })) }
+        : undefined,
     },
   });
 
@@ -62,6 +69,66 @@ export async function createEmployeeAction(
     action: `Employee ${employee.name} added (${employee.role})`,
     entityType: "AdminUser",
     entityId: employee.id,
+  });
+
+  revalidatePath("/admin/employees");
+  return { ok: true };
+}
+
+/** Edits name/phone/designation/role and replaces the full set of
+ * managed-creator assignments — the picker always submits the complete
+ * desired selection, so replacing (rather than diffing) is simplest and
+ * correct. Password is unchanged here; there's no reset-password flow
+ * yet, matching the spec's scope (role + managed creators). */
+export async function updateEmployeeAction(
+  employeeId: string,
+  _prev: EmployeeFormState,
+  formData: FormData,
+): Promise<EmployeeFormState> {
+  const session = await getSession();
+  if (!session) redirect("/admin/login");
+  if (session.role !== "SUPER_ADMIN") {
+    return { error: "Only Super Admins can edit employees." };
+  }
+
+  const parsed = employeeSchema.omit({ password: true }).safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+  const data = parsed.data;
+  const managedCreatorIds = formData.getAll("managedCreatorIds").map(String).filter(Boolean);
+
+  const existing = await prisma.adminUser.findUnique({ where: { email: data.email } });
+  if (existing && existing.id !== employeeId) {
+    return { error: `${data.email} is already registered to another account.` };
+  }
+
+  await prisma.$transaction([
+    prisma.adminUser.update({
+      where: { id: employeeId },
+      data: {
+        name: data.name,
+        email: data.email,
+        phone: data.phone || undefined,
+        designation: data.designation || undefined,
+        role: data.role,
+      },
+    }),
+    prisma.employeeManagedCreator.deleteMany({ where: { adminUserId: employeeId } }),
+    ...(managedCreatorIds.length
+      ? [
+          prisma.employeeManagedCreator.createMany({
+            data: managedCreatorIds.map((creatorId) => ({ adminUserId: employeeId, creatorId })),
+          }),
+        ]
+      : []),
+  ]);
+
+  await logActivity({
+    actorId: session.id,
+    action: `Employee ${data.name} updated`,
+    entityType: "AdminUser",
+    entityId: employeeId,
   });
 
   revalidatePath("/admin/employees");
