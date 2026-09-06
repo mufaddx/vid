@@ -6,6 +6,20 @@ const nextConfig: NextConfig = {
   // which Next's dev server treats as cross-origin for HMR by default.
   allowedDevOrigins: ["127.0.0.1", "localhost"],
 
+  // Hostinger's shared-hosting MySQL plan has a low connection cap.
+  // Static generation (blog/legal pages via generateStaticParams) was
+  // spinning up dozens of parallel build workers, each opening its own
+  // Prisma connection — enough simultaneous connections to get the
+  // MySQL server to drop them mid-build ("Server has closed the
+  // connection", P1017), which fails the ENTIRE production build (a
+  // failed build means the previous version stays live — the deploy
+  // itself never went out, not a runtime bug). Fewer, retrying workers
+  // keeps concurrent DB connections during the build well under the cap.
+  experimental: {
+    staticGenerationRetryCount: 2,
+    staticGenerationMinPagesPerWorker: 50,
+  },
+
   // Hostinger's edge CDN sits in front of the app and was caching HTML
   // page responses. Every deploy renames the hashed JS/CSS chunk files
   // (old ones are removed), so a cached HTML page from before a deploy
