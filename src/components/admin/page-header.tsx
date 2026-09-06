@@ -10,7 +10,7 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="sticky top-12 z-20 flex items-center justify-between gap-4 px-8 py-4 border-b border-violet-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+    <div className="sticky top-0 z-20 flex items-center justify-between gap-4 px-8 py-4 border-b border-violet-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
       <div>
         <h1 className="text-lg font-semibold text-neutral-900 leading-tight">{title}</h1>
         {description ? (
