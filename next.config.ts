@@ -60,17 +60,34 @@ const nextConfig: NextConfig = {
   // auto-hyphenate wrapped text. That package's package.json "exports"
   // map declares only an "import" condition (no "require", not even for
   // its "./*" wildcard) — a real, unfixed gap in its one and only
-  // published version (0.1.0). Depending on how that specifier ends up
-  // getting resolved at runtime, that can throw
-  // ERR_PACKAGE_PATH_NOT_EXPORTED and take down PDF generation entirely.
-  // Aliasing it to a local no-op shim (see src/lib/pdf/hyphenate-en-us-shim.js)
-  // sidesteps the broken package's resolution altogether — every PDF in
-  // the app is plain-English legal/financial copy that doesn't need
-  // automatic mid-word hyphenation anyway. Configured for both: `next dev`
-  // runs on Turbopack (its own resolver, own config key) while `next build`
-  // runs on webpack (see package.json's "build" script) — without a
-  // `turbopack` entry here, Turbopack refuses to start at all as soon as
-  // it sees an unrecognized `webpack()` config function present.
+  // published version (0.1.0).
+  //
+  // @react-pdf/renderer ships on Next.js's own default
+  // serverExternalPackages list (see server-external-packages.jsonc in
+  // the next package) — Next deliberately does NOT bundle it (or
+  // anything it requires, @react-pdf/hyphenate included) for Route
+  // Handlers; it's left as a plain Node.js `require()` resolved straight
+  // against the real node_modules at actual runtime, which is a
+  // DIFFERENT resolution path than webpack's own bundler-time resolution
+  // (confirmed: transpilePackages here has no effect — the parent package
+  // being external means webpack never even looks at what it requires).
+  // The REAL fix is scripts/patch-react-pdf-hyphenate.mjs (run via the
+  // "postinstall" script in package.json, on every `npm install` —
+  // including Hostinger's own build), which patches that one missing
+  // "require" condition directly into the installed package.json. See
+  // that script for the full explanation of why this is safe and why it
+  // only matters on newer Node (production's Node 22, not this
+  // container's Node 20).
+  //
+  // The alias below is a harmless second line of defense for whichever
+  // PDF routes/pages Next *does* end up bundling (none currently, per the
+  // above, but this costs nothing to leave in place) — every PDF in this
+  // app is plain-English legal/financial copy that doesn't need
+  // automatic mid-word hyphenation anyway. Configured for both: `next
+  // dev` runs on Turbopack (own resolver, own config key) while `next
+  // build` runs on webpack (see package.json's "build" script) — without
+  // a `turbopack` entry here, Turbopack refuses to start at all as soon
+  // as it sees an unrecognized `webpack()` config function present.
   turbopack: {
     resolveAlias: {
       "@react-pdf/hyphenate/en-us": "./src/lib/pdf/hyphenate-en-us-shim.js",
