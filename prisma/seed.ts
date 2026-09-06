@@ -24,6 +24,15 @@ async function main() {
     create: { id: "company", ...companyData },
   });
 
+  // The company's own working mailbox — standalone, not tied to any
+  // creator. Previously only existed as CompanySettings.email/the
+  // EMAIL_FROM fallback, never as a real, manageable mailbox row.
+  await prisma.creatorEmailAccount.upsert({
+    where: { emailAddress: "hello@vidlix.in" },
+    update: {},
+    create: { emailAddress: "hello@vidlix.in", localPart: "hello", domain: "vidlix.in" },
+  });
+
   // Super admin
   const passwordHash = await bcrypt.hash("vidlix@admin123", 12);
   await prisma.adminUser.upsert({

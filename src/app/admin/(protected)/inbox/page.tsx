@@ -3,12 +3,20 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { ComposeDialog } from "@/components/admin/inbox/compose-dialog";
+import { MailboxFilter } from "@/components/admin/inbox/mailbox-filter";
 import { timeAgo } from "@/lib/format";
 import { Inbox } from "lucide-react";
 
-export default async function InboxPage() {
+export default async function InboxPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mailbox?: string }>;
+}) {
+  const { mailbox: mailboxId } = await searchParams;
+
   const [threads, mailboxes] = await Promise.all([
     prisma.emailThread.findMany({
+      where: mailboxId ? { creatorEmailAccountId: mailboxId } : undefined,
       include: {
         creatorEmailAccount: { include: { creator: true } },
         messages: { orderBy: { createdAt: "desc" }, take: 1 },
@@ -22,20 +30,28 @@ export default async function InboxPage() {
     }),
   ]);
 
+  const mailboxOptions = mailboxes.map((m) => ({ id: m.id, emailAddress: m.emailAddress, creatorName: m.creator?.name ?? "Standalone" }));
+  const selectedMailbox = mailboxId ? mailboxOptions.find((m) => m.id === mailboxId) : undefined;
+
   return (
     <div>
       <PageHeader
         title="Inbox"
-        description="Unified inbox across every creator mailbox"
+        description={selectedMailbox ? `Mailbox: ${selectedMailbox.emailAddress}` : "Unified inbox across every creator mailbox"}
         actions={
-          <ComposeDialog
-            mailboxes={mailboxes.map((m) => ({ id: m.id, emailAddress: m.emailAddress, creatorName: m.creator?.name ?? "Standalone" }))}
-          />
+          <div className="flex items-center gap-2">
+            <MailboxFilter mailboxes={mailboxOptions} selectedId={mailboxId} />
+            <ComposeDialog mailboxes={mailboxOptions} />
+          </div>
         }
       />
       <div className="p-8">
         {threads.length === 0 ? (
-          <EmptyState icon={Inbox} title="No emails in this inbox" description="Threads from brand communications will appear here." />
+          <EmptyState
+            icon={Inbox}
+            title={selectedMailbox ? `No emails for ${selectedMailbox.emailAddress}` : "No emails in this inbox"}
+            description="Threads from brand communications will appear here."
+          />
         ) : (
           <div className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100">
             {threads.map((t) => (

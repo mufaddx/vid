@@ -9,9 +9,12 @@ import { sendEmail } from "@/lib/email/send";
 import { creatorEmailCreatedEmail } from "@/lib/email/templates";
 
 const DOMAIN = "vidlix.in";
+// "hello" is deliberately NOT reserved — it's the company's own real,
+// managed mailbox (seeded in prisma/seed.ts / seed.prod.ts). The rest
+// stay blocked as generic system/role addresses admins shouldn't hand
+// out as a creator or standalone mailbox.
 const RESERVED = new Set([
   "admin",
-  "hello",
   "support",
   "billing",
   "info",
