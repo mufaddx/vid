@@ -33,7 +33,9 @@ async function main() {
   log("crop UI loaded inside Add Creator dialog");
 
   await page.click('button:has-text("Save Photo")');
-  await page.waitForTimeout(1500);
+  // Uploads two images to R2 (avatar + card) before the dialog closes —
+  // a real network round-trip now, not an instant local write.
+  await page.waitForSelector('[role="dialog"]', { state: "detached", timeout: 10000 }).catch(() => {});
 
   const dialogGoneAfterSave = (await page.locator('[role="dialog"]').count()) === 0;
   const creator1 = await prisma.creator.findFirstOrThrow({ where: { name: `Photo Flow Creator ${uniq1}` } });

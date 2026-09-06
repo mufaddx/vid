@@ -36,7 +36,8 @@ async function main() {
   await page.fill('input[type="range"]', "1.4");
 
   await page.click('button:has-text("Save Photo")');
-  await page.waitForTimeout(1500);
+  // Uploads two images to R2 (avatar + card) — a real network round-trip.
+  await page.waitForSelector('[role="dialog"]', { state: "detached", timeout: 10000 }).catch(() => {});
 
   const updated = await prisma.creator.findUniqueOrThrow({ where: { id: creator.id } });
   log("profileImage set:", updated.profileImage);

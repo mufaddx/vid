@@ -77,7 +77,11 @@ async function main() {
   await p1.waitForTimeout(500);
   await p1.fill('input[placeholder="Type your full legal name"]', cmAgreement.creator.name);
   await p1.click('button:has-text("Apply Signature")');
-  await p1.waitForTimeout(1500);
+  // Generating the final PDF now involves a real network round-trip to R2
+  // (saveFile), not an instant local disk write — wait for the actual
+  // completion text instead of a fixed timeout that R2's added latency
+  // can occasionally outrun.
+  await p1.waitForSelector("text=/Agreement Completed|Signature Recorded/", { timeout: 10000 }).catch(() => {});
   const doneHeading = await p1.locator("text=Agreement Completed").count();
   log("creator management: completion screen shown:", doneHeading > 0);
 
@@ -149,7 +153,7 @@ async function main() {
   await p3.waitForTimeout(500);
   await p3.fill('input[placeholder="Type your full legal name"]', bcAgreement.brand.contactPerson ?? bcAgreement.brand.name);
   await p3.click('button:has-text("Apply Signature")');
-  await p3.waitForTimeout(1500);
+  await p3.waitForSelector("text=/Agreement Completed|Signature Recorded/", { timeout: 10000 }).catch(() => {});
   const bcDone = await p3.locator("text=Agreement Completed").count();
   log("brand signed, agreement completed:", bcDone > 0);
 
