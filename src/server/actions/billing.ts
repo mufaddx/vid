@@ -45,6 +45,9 @@ export async function createInvoiceAction(formData: FormData): Promise<void> {
   const invoiceNumber = await nextDocumentNumber(company.invoicePrefix);
   const billToName = data.invoiceType === "BRAND_CAMPAIGN" ? brand?.name ?? creator.name : creator.name;
 
+  // A freshly created invoice is always status "ISSUED" in the database
+  // (see prisma.invoice.create below) — the PDF badge must reflect that
+  // real status, not an invented label unrelated to the InvoiceStatus enum.
   const pdfBuffer = await renderInvoicePdf({
     company,
     invoiceNumber,
@@ -58,7 +61,7 @@ export async function createInvoiceAction(formData: FormData): Promise<void> {
     tax: data.tax,
     discount: data.discount,
     total,
-    status: "PENDING",
+    status: "PAYMENT PENDING",
   });
 
   const assetId = await saveFile(pdfBuffer, {
