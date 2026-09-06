@@ -9,6 +9,7 @@ import { slugify } from "@/lib/format";
 import { logActivity } from "@/lib/activity";
 import { computeTotalAudience } from "@/lib/audience";
 import { hasPermission } from "@/lib/permissions";
+import { saveFile } from "@/lib/storage";
 
 const creatorSchema = z.object({
   name: z.string().min(2),
@@ -198,4 +199,60 @@ export async function connectSocialAccountAction(
   });
 
   revalidatePath(`/admin/creators/${creatorId}`);
+}
+
+export type PhotoUploadResult = { ok: true } | { ok: false; error: string };
+
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+
+/** Saves the two crop variants a single crop session produces (see
+ * PhotoCropDialog) — a square "avatar" and a wider "card" — through the
+ * existing asset storage, and points Creator.profileImage/cardImage at
+ * their new public URLs (served by /api/images/[assetId], unlike the
+ * private /api/files route PDFs use). */
+export async function uploadCreatorPhotoAction(
+  creatorId: string,
+  formData: FormData,
+): Promise<PhotoUploadResult> {
+  const session = await getSession();
+  if (!session) return { ok: false, error: "Not authorized." };
+  if (!hasPermission(session.role, "creators")) {
+    return { ok: false, error: "Your role does not have access to Creators." };
+  }
+
+  const avatar = formData.get("avatar");
+  const card = formData.get("card");
+  if (!(avatar instanceof File) || !(card instanceof File)) {
+    return { ok: false, error: "Missing image data." };
+  }
+  if (avatar.size > MAX_PHOTO_BYTES || card.size > MAX_PHOTO_BYTES) {
+    return { ok: false, error: "Image is too large." };
+  }
+
+  const [avatarAssetId, cardAssetId] = await Promise.all([
+    saveFile(Buffer.from(await avatar.arrayBuffer()), { filename: "avatar.jpg", extension: "jpg" }),
+    saveFile(Buffer.from(await card.arrayBuffer()), { filename: "card.jpg", extension: "jpg" }),
+  ]);
+
+  await prisma.creator.update({
+    where: { id: creatorId },
+    data: {
+      profileImage: `/api/images/${avatarAssetId}`,
+      cardImage: `/api/images/${cardAssetId}`,
+    },
+  });
+
+  await logActivity({
+    actorId: session.id,
+    action: "Creator photo updated",
+    entityType: "Creator",
+    entityId: creatorId,
+    creatorId,
+  });
+
+  revalidatePath(`/admin/creators/${creatorId}`);
+  revalidatePath("/admin/creators");
+  revalidatePath("/");
+  revalidatePath("/creators");
+  return { ok: true };
 }

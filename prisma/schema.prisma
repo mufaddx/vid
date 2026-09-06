@@ -194,7 +194,8 @@ model Creator {
   name                  String
   slug                  String        @unique
   displayName           String?
-  profileImage          String?
+  profileImage          String? // square "avatar" crop — served publicly via /api/images/[assetId]
+  cardImage             String? // wider "card" crop (matches the public creator-card's 4:5 aspect)
   email                 String?
   phone                 String?
   address               String?

@@ -8,20 +8,22 @@ export type CreatorCardData = {
   category: string | null;
   city: string | null;
   profileImage: string | null;
+  cardImage?: string | null;
   totalAudience: number;
 };
 
 export function CreatorCard({ creator }: { creator: CreatorCardData }) {
+  const image = creator.cardImage ?? creator.profileImage;
   return (
     <Link
       href={`/creators/${creator.slug}`}
       className="group block rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-violet-400/30 hover:-translate-y-1 transition-all overflow-hidden"
     >
       <div className="aspect-[4/5] bg-neutral-900 relative overflow-hidden">
-        {creator.profileImage ? (
+        {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={creator.profileImage}
+            src={image}
             alt={creator.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />

@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { SocialPanel } from "@/components/admin/creator/social-panel";
 import { FinancialSummary } from "@/components/admin/creator/financial-summary";
 import { EmailPanel } from "@/components/admin/creator/email-panel";
+import { PhotoCropDialog } from "@/components/admin/creator/photo-crop-dialog";
 import { markPayoutPaidAction } from "@/server/actions/billing";
 import { computeTotalAudience } from "@/lib/audience";
 import { formatCompactNumber, formatDate, formatINR, timeAgo } from "@/lib/format";
@@ -56,10 +57,13 @@ export default async function CreatorDetailPage({
         <div className="sticky top-0 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 border-b border-violet-100 px-8 pt-8">
           <div className="flex items-start justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
-              <Avatar className="size-16 ring-2 ring-violet-100">
-                <AvatarImage src={creator.profileImage ?? undefined} />
-                <AvatarFallback className="text-lg bg-violet-50 text-violet-700">{creator.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
+              <div className="relative shrink-0">
+                <Avatar className="size-16 ring-2 ring-violet-100">
+                  <AvatarImage src={creator.profileImage ?? undefined} />
+                  <AvatarFallback className="text-lg bg-violet-50 text-violet-700">{creator.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <PhotoCropDialog creatorId={id} />
+              </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-neutral-900">{creator.name}</h1>

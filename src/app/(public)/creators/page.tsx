@@ -93,6 +93,7 @@ export default async function CreatorsDirectoryPage({
                 category: c.category,
                 city: c.city,
                 profileImage: c.profileImage,
+                cardImage: c.cardImage,
                 totalAudience: computeTotalAudience(c.socialAccounts),
               }}
             />

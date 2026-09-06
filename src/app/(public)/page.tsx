@@ -50,6 +50,7 @@ export default async function HomePage() {
     category: c.category,
     city: c.city,
     profileImage: c.profileImage,
+    cardImage: c.cardImage,
     totalAudience: computeTotalAudience(c.socialAccounts),
   }));
 

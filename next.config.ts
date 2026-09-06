@@ -28,6 +28,16 @@ const nextConfig: NextConfig = {
         source: "/_next/static/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
+      // Creator photos — content-addressed by a random asset id, so a
+      // given URL's bytes never change; safe (and important, for public
+      // site performance) to cache forever, same as the static chunks
+      // above. This overrides the catch-all no-store rule for this path
+      // specifically — the route handler's own Cache-Control header
+      // alone isn't enough because it's applied before this config layer.
+      {
+        source: "/api/images/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
     ];
   },
 };
