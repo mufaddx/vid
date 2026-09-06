@@ -5,7 +5,8 @@ import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tabs as TabsPrimitive } from "radix-ui";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { SocialPanel } from "@/components/admin/creator/social-panel";
 import { FinancialSummary } from "@/components/admin/creator/financial-summary";
@@ -127,15 +128,15 @@ export default async function CreatorDetailPage({
             </div>
           </div>
 
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="social">Social</TabsTrigger>
-            <TabsTrigger value="agreements">Agreements</TabsTrigger>
-            <TabsTrigger value="billing">Billing</TabsTrigger>
-            <TabsTrigger value="email">Email</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
-          </TabsList>
+          <TabsPrimitive.List className="inline-flex items-center gap-1 rounded-2xl bg-neutral-100/80 p-1.5 overflow-x-auto">
+            <CreatorTab value="overview">Overview</CreatorTab>
+            <CreatorTab value="social">Social</CreatorTab>
+            <CreatorTab value="agreements">Agreements</CreatorTab>
+            <CreatorTab value="billing">Billing</CreatorTab>
+            <CreatorTab value="email">Email</CreatorTab>
+            <CreatorTab value="documents">Documents</CreatorTab>
+            <CreatorTab value="activity">Activity</CreatorTab>
+          </TabsPrimitive.List>
         </div>
 
         <div className="p-8">
@@ -405,5 +406,22 @@ export default async function CreatorDetailPage({
         </div>
       </Tabs>
     </div>
+  );
+}
+
+// A bespoke, higher-contrast tab strip for this page only — built on the
+// raw Radix primitive rather than the shared shadcn TabsList/TabsTrigger
+// (used elsewhere in the admin panel), so this page's tab bar can look
+// like a proper pill-segmented control (active tab lifted on a white
+// card with a shadow, generous padding) without changing how Tabs look
+// on every other page.
+function CreatorTab({ value, children }: { value: string; children: React.ReactNode }) {
+  return (
+    <TabsPrimitive.Trigger
+      value={value}
+      className="rounded-xl px-4 py-2 text-sm font-medium text-neutral-500 whitespace-nowrap transition-all hover:text-neutral-800 data-[state=active]:bg-white data-[state=active]:text-violet-700 data-[state=active]:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300"
+    >
+      {children}
+    </TabsPrimitive.Trigger>
   );
 }
