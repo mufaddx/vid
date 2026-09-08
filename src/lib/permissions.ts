@@ -32,7 +32,7 @@ export type Module = (typeof MODULES)[number];
 // Every role can always reach the dashboard — it's the landing page a
 // denied route redirects back to, so it must never itself be denied.
 const MATRIX: Record<Exclude<AdminRole, "SUPER_ADMIN">, Module[]> = {
-  TALENT_MANAGER: ["dashboard", "creators", "agreements", "collaborations", "documents"],
+  TALENT_MANAGER: ["dashboard", "creators", "agreements", "collaborations", "documents", "inbox"],
   CAMPAIGN_MANAGER: ["dashboard", "brands", "campaigns", "collaborations", "agreements"],
   FINANCE_MANAGER: ["dashboard", "billing", "documents", "reports"],
   INBOX_MANAGER: ["dashboard", "inbox", "email-accounts", "inquiries"],
