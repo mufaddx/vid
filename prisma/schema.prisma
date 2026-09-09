@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -121,7 +121,7 @@ model BlogPost {
   slug           String         @unique
   title          String
   excerpt        String         @db.Text
-  content        String         @db.LongText // sanitized HTML
+  content        String         @db.Text // sanitized HTML
   coverImageUrl  String?
   categoryId     String?
   category       BlogCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -145,7 +145,7 @@ model LegalPage {
   id        String   @id @default(cuid())
   slug      String   @unique
   title     String
-  content   String   @db.LongText // sanitized HTML
+  content   String   @db.Text // sanitized HTML
   updatedAt DateTime @updatedAt
 
   @@map("legal_pages")
@@ -207,7 +207,7 @@ model Creator {
   longBio               String?       @db.Text
   journeyStartYear      Int?
   category              String?
-  languages             Json          @default("[]") // string[] — MySQL has no native array type
+  languages             String[]      @default([])
   status                CreatorStatus @default(PENDING)
   featured              Boolean       @default(false)
   orbitPriority         Int           @default(0)
@@ -593,7 +593,7 @@ model Signature {
   signerName     String
   signerEmail    String?
   method         String     // draw | type | upload
-  signatureAsset String     @db.LongText // data URI or storage reference — can be a sizeable base64 PNG
+  signatureAsset String     @db.Text // data URI or storage reference — can be a sizeable base64 PNG
   otpVerified    Boolean    @default(false)
   signedAt       DateTime   @default(now())
   createdAt      DateTime   @default(now())
